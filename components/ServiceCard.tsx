@@ -33,7 +33,7 @@ export default function ServiceCard({ sectionId, service }: ServiceCardProps) {
               checked={isSelected}
               onCheckedChange={() => toggleService(sectionId, service.id)}
             />
-            <CardTitle className="text-lg">{service.name}</CardTitle>
+            <CardTitle className="text-sm">{service.name}</CardTitle>
           </div>
           <CardDescription>{service.description}</CardDescription>
         </CardHeader>
