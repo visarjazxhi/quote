@@ -16,7 +16,8 @@ export interface ServiceWithOptions {
   quantity?: number; // Quantity for the selected option
 }
 
-export type Service = ServiceWithOptions; // Only one type of service now
+// export type Service = ServiceWithOptions; // Only one type of service now
+export type Service = ServiceWithOptions | ServiceWithFixedCost; // Add the new type
 
 export interface ServiceSection {
   id: string;
@@ -24,15 +25,21 @@ export interface ServiceSection {
   services: Service[];
 }
 
+export interface ServiceWithFixedCost {
+  id: string;
+  name: string;
+  description: string;
+  type: "fixedCost"; // New type for fixed costs
+  value?: number; // The fixed cost value input by the user
+}
+
+
 interface EstimationStore {
   sections: ServiceSection[];
   toggleService: (sectionId: string, serviceId: string) => void;
   updateOption: (sectionId: string, serviceId: string, option: string) => void;
-  updateQuantity: (
-    sectionId: string,
-    serviceId: string,
-    quantity: number
-  ) => void;
+  updateQuantity: (sectionId: string, serviceId: string, quantity: number) => void;
+  updateFixedCost: (sectionId: string, serviceId: string, value: number) => void; // New function
   totalCost: () => number;
   addSection: (name: string) => void;
 }
@@ -49,10 +56,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Managing and assigning client identifiers.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -63,10 +72,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Setting up client accounts on Xero Practice Manager.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -77,10 +88,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Nomination on ATO as the client's tax agent.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -91,10 +104,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Onboarding clients with the ASIC",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -105,10 +120,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Client engagement and interaction services.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -119,10 +136,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Managing workflow and job assignments.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -133,10 +152,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Gathering and reviewing client data.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -147,10 +168,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Setting up new clients from Cleardocs.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -167,10 +190,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Applying for an Australian Business Number (ABN).",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -181,10 +206,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Applying for a Tax File Number (TFN).",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -196,10 +223,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Applying for Goods and Services Tax (GST) registration.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -210,10 +239,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Applying for stamp duty on State Revenue Office (SRO).",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -230,10 +261,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Preparation of annual financial accounts.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -244,10 +277,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Preparation and lodgment of tax returns.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -259,10 +294,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Preparation and submission of taxable payments reports.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -273,10 +310,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Assistance with Workcover application.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -287,10 +326,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Processing and lodging payroll tax reconciliation.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -302,10 +343,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Administrative support including email management and regulatory reporting.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -317,10 +360,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Communication and liaison with the Australian Taxation Office.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -331,10 +376,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Handling business correspondence and communication.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -345,10 +392,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Review of financial accounts and reports.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -360,10 +409,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Business consultation and strategy meeting with clients.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -374,10 +425,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Any other additional services required.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -388,10 +441,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Handling client transitions and offboarding processes.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -408,10 +463,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Review of annual reports and compliance documents.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -423,10 +480,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Handling other administrative tasks related to ASIC compliance.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -437,10 +496,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Consultation and advisory meetings with clients.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -451,10 +512,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Managing the transition and offboarding of clients.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -472,10 +535,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Preparation and lodgment of monthly Business Activity Statements including GST reconciliation.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -487,10 +552,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Preparation and lodgment of quarterly Business Activity Statements including GST reconciliation.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -502,10 +569,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Preparation and lodgment of Instalment Activity Statements.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -517,10 +586,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Handling other administrative tasks related to Activity Statements.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -531,10 +602,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Managing the transition and offboarding of clients.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -552,10 +625,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Managing accounts receivable, accounts payable, journal entries, and financial reports.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -567,10 +642,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Reconciling bank transactions to ensure accuracy in financial records.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -581,10 +658,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "General bookkeeping attendance and support.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -596,10 +675,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Processing data entry, bank transaction coding, and reconciliation.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -611,10 +692,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Processing payroll and preparing ABA files for direct payments.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -626,10 +709,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Processing and lodging Single Touch Payroll (STP) reports.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -641,10 +726,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Processing and lodging superannuation payments for employees.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -656,10 +743,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Providing support and assistance for Xero bookkeeping tasks.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -671,10 +760,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Setting up Xero accounts and configurations for business needs.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -685,10 +776,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Providing training sessions on using Xero effectively.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -700,10 +793,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Processing accounts payable and preparing batch payments.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -715,10 +810,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Managing accounts receivable and reconciling outstanding debts.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined,
@@ -736,10 +833,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Comprehensive strategies to help you achieve a comfortable and secure retirement.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined
@@ -750,10 +849,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Guidance on investment strategies, portfolio management, and risk assessment.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined
@@ -764,10 +865,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Maximizing your superannuation contributions and tax benefits for long-term wealth building.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined
@@ -778,10 +881,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Structuring your investments to minimize tax liabilities and maximize returns.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined
@@ -792,14 +897,37 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Ensuring a smooth transfer of wealth through wills, trusts, and tax-efficient strategies.",
           type: "withOptions",
           options: [
-            { value: "junior", label: "Junior Accountant", rate: 75 },
-            { value: "standard", label: "Standard", rate: 150 },
-            { value: "senior", label: "Senior Accountant", rate: 300 },
-            { value: "partner", label: "Partner Rate", rate: 600 },
+            { value: "admin", label: "Admin", rate: 75 },
+            { value: "junior", label: "Junior Accountant", rate: 100 },
+            { value: "standard", label: "Standart", rate: 150 },
+            { value: "intermediate", label: "Intermediate Accountant", rate: 200 },
+            { value: "senior", label: "Senior Manager", rate: 400 },
+            { value: "partner", label: "Partner", rate: 600 },
           ],
           selectedOption: undefined,
           quantity: undefined
         }
+      ],
+    },
+
+        {
+      id: "fixed-costs",
+      name: "Adjustments",
+      services: [
+        {
+          id: "fixed-cost-1",
+          name: "Additional Fixed Cost",
+          description: "Any additional fixed cost.",
+          type: "fixedCost",
+          value: undefined, // Initially undefined
+        },
+        {
+          id: "fixed-cost-2",
+          name: "Discounts",
+          description: "Enter a negative amount for a discount.",
+          type: "fixedCost",
+          value: undefined, // Initially undefined
+        },
       ],
     },
 
@@ -833,14 +961,21 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
               ...section,
               services: section.services.map((service) =>
                 service.id === serviceId
-                  ? {
-                      ...service,
-                      selectedOption:
-                        service.selectedOption === undefined
-                          ? service.options[0].value
-                          : undefined,
-                      quantity: service.quantity === undefined ? 1 : undefined, // Default quantity to 1
-                    }
+                  ? service.type === "withOptions"
+                    ? {
+                        ...service,
+                        selectedOption:
+                          service.selectedOption === undefined
+                            ? service.options[0].value
+                            : undefined,
+                        quantity: service.quantity === undefined ? 1 : undefined,
+                      }
+                    : service.type === "fixedCost"
+                    ? {
+                        ...service,
+                        value: service.value === undefined ? 0 : undefined, // Default to 0
+                      }
+                    : service
                   : service
               ),
             }
@@ -870,7 +1005,22 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
               ...section,
               services: section.services.map((service) =>
                 service.id === serviceId && service.type === "withOptions"
-                  ? { ...service, quantity: quantity >= 0 ? quantity : 1 } // Prevent negative quantities
+                  ? { ...service, quantity: quantity }
+                  : service
+              ),
+            }
+          : section
+      ),
+    })),
+  updateFixedCost: (sectionId, serviceId, value) =>
+    set((state) => ({
+      sections: state.sections.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              services: section.services.map((service) =>
+                service.id === serviceId && service.type === "fixedCost"
+                  ? { ...service, value: value} // >= 0 ? value : 0 } // Prevent negative values
                   : service
               ),
             }
@@ -883,17 +1033,15 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
       return (
         sectionTotal +
         section.services.reduce((serviceTotal, service) => {
-          if (
-            service.type === "withOptions" &&
-            service.selectedOption &&
-            service.quantity
-          ) {
+          if (service.type === "withOptions" && service.selectedOption && service.quantity) {
             const selectedOption = service.options.find(
               (opt) => opt.value === service.selectedOption
             );
             if (selectedOption) {
               return serviceTotal + selectedOption.rate * service.quantity; // Rate * Quantity
             }
+          } else if (service.type === "fixedCost" && service.value !== undefined) {
+            return serviceTotal + service.value; // Add fixed cost value
           }
           return serviceTotal;
         }, 0)
