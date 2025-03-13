@@ -61,8 +61,8 @@ function MainNav() {
         <Link href="/emails" className="text-sm font-medium text-muted-foreground">
           Email Templates
         </Link>
-        <Link href="#" className="text-sm font-medium text-muted-foreground">
-          Links
+        <Link href="/priority" className="text-sm font-medium text-muted-foreground">
+          Priority Matrix
         </Link>
         <Link href="#" className="text-sm font-medium text-muted-foreground">
           Coming Soon
@@ -95,8 +95,8 @@ function MainNav() {
         <Link href="/emails" className="text-sm font-medium text-muted-foreground">
           Email Templates
         </Link>
-        <Link href="#" className="text-sm font-medium text-muted-foreground">
-          Links
+        <Link href="/priority" className="text-sm font-medium text-muted-foreground">
+          Priority Matrix
         </Link>
         <Link href="#" className="text-sm font-medium text-muted-foreground">
           Coming Soon
