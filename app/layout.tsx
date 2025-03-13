@@ -6,6 +6,8 @@ import Link from "next/link";
 import { Menu } from "lucide-react";
 import Image from 'next/image';
 import { useState } from "react";
+import { Toaster } from "react-hot-toast";
+
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,6 +18,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+
       <body className={`${inter.className} min-h-screen bg-background text-foreground`}>
         <div className="flex flex-col min-h-screen">
           <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -23,7 +26,9 @@ export default function RootLayout({
               <MainNav />
             </div>
           </header>
-          <main className="flex-1">{children}</main>
+          <main className="flex-1">{children}
+          <Toaster />
+          </main>
           <footer className="border-t">
             <div className="container flex h-16 items-center justify-between">
               <p className="text-sm text-muted-foreground">© 2025 IAA App. All rights reserved.</p>
@@ -53,8 +58,8 @@ function MainNav() {
         <Link href="/quote" className="text-sm font-medium text-muted-foreground">
           Quotes
         </Link>
-        <Link href="#" className="text-sm font-medium text-muted-foreground">
-          Calculators
+        <Link href="/emails" className="text-sm font-medium text-muted-foreground">
+          Email Templates
         </Link>
         <Link href="#" className="text-sm font-medium text-muted-foreground">
           Links
@@ -87,8 +92,8 @@ function MainNav() {
         <Link href="/quote" className="text-sm font-medium text-muted-foreground">
           Quotes
         </Link>
-        <Link href="#" className="text-sm font-medium text-muted-foreground">
-          Calculators
+        <Link href="/emails" className="text-sm font-medium text-muted-foreground">
+          Email Templates
         </Link>
         <Link href="#" className="text-sm font-medium text-muted-foreground">
           Links

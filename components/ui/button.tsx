@@ -19,6 +19,26 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
+        success:
+          "bg-green-500 text-white shadow-sm hover:bg-green-600", // Success variant
+        warning:
+          "bg-yellow-500 text-white shadow-sm hover:bg-yellow-600", // Warning variant
+        info:
+          "bg-blue-500 text-white shadow-sm hover:bg-blue-600", // Info variant
+        premium:
+          "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-sm hover:from-purple-600 hover:to-pink-600", // Premium gradient variant
+        dark:
+          "bg-gray-900 text-white shadow-sm hover:bg-gray-800", // Dark variant
+        light:
+          "bg-gray-100 text-gray-900 shadow-sm hover:bg-gray-200", // Light variant
+          danger:
+          "bg-red-500 text-white shadow-sm hover:bg-red-600", // Danger variant
+        teal:
+          "bg-teal-500 text-white shadow-sm hover:bg-teal-600", // Teal variant
+        indigo:
+          "bg-indigo-500 text-white shadow-sm hover:bg-indigo-600", // Indigo variant
+        orange:
+          "bg-orange-500 text-white shadow-sm hover:bg-orange-600", // Orange variant
       },
       size: {
         default: "h-9 px-4 py-2",
@@ -32,7 +52,7 @@ const buttonVariants = cva(
       size: "default",
     },
   }
-)
+);
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
