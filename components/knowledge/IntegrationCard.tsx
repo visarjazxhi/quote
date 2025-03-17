@@ -1,13 +1,12 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
 import type { Integration } from "@/data/knowledge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Eye, Download, ExternalLink } from "lucide-react"
+import { Eye, Download, ExternalLink, FileText, FileArchive, File } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 type IntegrationCardProps = {
   integration: Integration
@@ -15,18 +14,23 @@ type IntegrationCardProps = {
 
 export default function IntegrationCard({ integration }: IntegrationCardProps) {
   const [dialogOpen, setDialogOpen] = useState(false)
-  const Icon: React.ComponentType<React.SVGProps<SVGSVGElement>> = integration.icon
+  const IconComponent: React.ElementType = integration.icon
 
-  const handleDownload = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    // In a real app, you would implement actual file download logic here
-    window.open(integration.fileUrl, "_blank")
+  // Function to get appropriate icon based on file type
+  const getFileIcon = (fileType?: string) => {
+    switch (fileType?.toLowerCase()) {
+      case "pdf":
+        return <FileText className="h-4 w-4 mr-2" />
+      case "zip":
+        return <FileArchive className="h-4 w-4 mr-2" />
+      default:
+        return <File className="h-4 w-4 mr-2" />
+    }
   }
 
-  const handleExternalLink = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    window.open(integration.websiteUrl, "_blank")
-  }
+  // Check if integration has files or links
+  const hasFiles = integration.files && integration.files.length > 0
+  const hasLinks = integration.links && integration.links.length > 0
 
   return (
     <>
@@ -37,7 +41,7 @@ export default function IntegrationCard({ integration }: IntegrationCardProps) {
               className="w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-300"
               style={{ backgroundColor: `${integration.color}20` }}
             >
-              <Icon
+              <IconComponent
                 className="w-6 h-6 transition-transform duration-300 group-hover:scale-110"
                 style={{ color: integration.color }}
               />
@@ -62,22 +66,43 @@ export default function IntegrationCard({ integration }: IntegrationCardProps) {
               <Eye className="h-4 w-4" />
             </Button>
 
-            {integration.fileUrl && (
-              <Button variant="ghost" size="sm" className="p-1 h-8 w-8" onClick={handleDownload} title="Download file">
-                <Download className="h-4 w-4" />
-              </Button>
+            {hasFiles && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="p-1 h-8 w-8" title="Download files">
+                    <Download className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {integration.files?.map((file, index) => (
+                    <DropdownMenuItem
+                      key={index}
+                      onClick={() => window.open(file.url, "_blank")}
+                      className="flex items-center"
+                    >
+                      {getFileIcon(file.type)}
+                      {file.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
 
-            {integration.websiteUrl && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-1 h-8 w-8"
-                onClick={handleExternalLink}
-                title="Visit website"
-              >
-                <ExternalLink className="h-4 w-4" />
-              </Button>
+            {hasLinks && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="p-1 h-8 w-8" title="Visit websites">
+                    <ExternalLink className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  {integration.links?.map((link, index) => (
+                    <DropdownMenuItem key={index} onClick={() => window.open(link.url, "_blank")}>
+                      {link.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
         </CardContent>
@@ -92,7 +117,7 @@ export default function IntegrationCard({ integration }: IntegrationCardProps) {
                 className="w-8 h-8 rounded-full flex items-center justify-center"
                 style={{ backgroundColor: `${integration.color}20` }}
               >
-                <Icon className="w-4 h-4" style={{ color: integration.color }} />
+                <IconComponent className="w-4 h-4" style={{ color: integration.color }} />
               </div>
               {integration.name}
             </DialogTitle>
@@ -101,31 +126,47 @@ export default function IntegrationCard({ integration }: IntegrationCardProps) {
           <div className="space-y-4">
             <p className="text-sm">{integration.description}</p>
 
-            <div className="flex space-x-2">
-              {integration.fileUrl && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
-                  onClick={() => window.open(integration.fileUrl, "_blank")}
-                >
-                  <Download className="h-4 w-4" />
-                  Download
-                </Button>
-              )}
+            {/* Files section */}
+            {hasFiles && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Files</h4>
+                <div className="grid grid-cols-1 gap-2">
+                  {integration.files?.map((file, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center justify-start gap-2 w-full"
+                      onClick={() => window.open(file.url, "_blank")}
+                    >
+                      {getFileIcon(file.type)}
+                      <span className="truncate">{file.name}</span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
 
-              {integration.websiteUrl && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-2"
-                  onClick={() => window.open(integration.websiteUrl, "_blank")}
-                >
-                  <ExternalLink className="h-4 w-4" />
-                  Visit Website
-                </Button>
-              )}
-            </div>
+            {/* Links section */}
+            {hasLinks && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium">Links</h4>
+                <div className="grid grid-cols-1 gap-2">
+                  {integration.links?.map((link, index) => (
+                    <Button
+                      key={index}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center justify-start gap-2 w-full"
+                      onClick={() => window.open(link.url, "_blank")}
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      <span className="truncate">{link.name}</span>
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>
