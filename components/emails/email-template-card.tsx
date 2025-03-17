@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Paperclip, Eye, Send, Download, Copy } from "lucide-react"; // Import Copy icon
+import { Paperclip, Eye, Send, Download, Copy } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import type { EmailTemplate } from "@/types/email-template";
 import { generateEmail } from "@/lib/email-utils";
-import toast from "react-hot-toast"; // Import React Hot Toast
+import toast from "react-hot-toast";
 
 interface EmailTemplateCardProps {
   template: EmailTemplate;
@@ -18,21 +18,24 @@ export function EmailTemplateCard({ template, onView }: EmailTemplateCardProps) 
   const { subject, body, attachments } = template;
   const [plainTextBody, setPlainTextBody] = useState("");
 
-  // Convert HTML to plain text on the client side
+  // Convert any HTML body to plain text on the client side
   useEffect(() => {
+    // This safely strips HTML tags
     const doc = new DOMParser().parseFromString(body, "text/html");
     setPlainTextBody(doc.body.textContent || "");
   }, [body]);
 
-  // Function to copy plain text to clipboard
+  // Copy plain text to clipboard
   const copyToClipboard = () => {
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(plainTextBody).then(() => {
-        toast.success("Text copied to clipboard!"); // Show toast
-      }).catch((error) => {
-        console.error("Failed to copy text:", error); // Debugging: Check for errors
-        toast.error("Failed to copy text. Please try again."); // Show error toast
-      });
+      navigator.clipboard.writeText(plainTextBody)
+        .then(() => {
+          toast.success("Text copied to clipboard!");
+        })
+        .catch((error) => {
+          console.error("Failed to copy text:", error);
+          toast.error("Failed to copy text. Please try again.");
+        });
     } else {
       // Fallback for older browsers
       const textArea = document.createElement("textarea");
@@ -41,20 +44,21 @@ export function EmailTemplateCard({ template, onView }: EmailTemplateCardProps) 
       textArea.select();
       try {
         document.execCommand("copy");
-        toast.success("Text copied to clipboard!"); // Show toast
+        toast.success("Text copied to clipboard!");
       } catch (error) {
-        console.error("Failed to copy text:", error); // Debugging: Check for errors
-        toast.error("Failed to copy text. Please try again."); // Show error toast
+        console.error("Failed to copy text:", error);
+        toast.error("Failed to copy text. Please try again.");
       }
       document.body.removeChild(textArea);
     }
   };
 
+  // Generate the email using plain text
   const handleSendEmail = () => {
-    generateEmail({ ...template, body: plainTextBody }); // Use plain text for email
+    generateEmail({ ...template, body: plainTextBody });
   };
 
-  // Function to handle file download
+  // Download a single attachment
   const handleDownload = (url: string, name: string) => {
     const link = document.createElement("a");
     link.href = url;
@@ -62,7 +66,7 @@ export function EmailTemplateCard({ template, onView }: EmailTemplateCardProps) 
     link.click();
   };
 
-  // Function to download all attachments
+  // Download all attachments
   const handleDownloadAll = () => {
     attachments.forEach((attachment) => {
       handleDownload(attachment.url, attachment.name);
@@ -85,7 +89,6 @@ export function EmailTemplateCard({ template, onView }: EmailTemplateCardProps) 
         </div>
       </CardHeader>
       <CardContent className="flex-grow">
-        {/* Display plain text in the card */}
         <p className="text-sm text-muted-foreground line-clamp-4 mb-3">
           {plainTextBody}
         </p>

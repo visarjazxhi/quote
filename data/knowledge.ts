@@ -1,6 +1,10 @@
 import {
+  CloudUpload,
   Globe,
-  MonitorCog
+  MonitorCog,
+  PersonStanding,
+  PiggyBank,
+  UserRoundCheck
   
 
 } from "lucide-react"
@@ -32,6 +36,7 @@ export type Integration = {
 
 export const categories = [
   "All",
+  "Admin Templates",
   "Advisory",
   "Auditing",
   "Bookkeeping",
@@ -109,14 +114,96 @@ export const integrations: Integration[] = [
 
 
   // Auditing Template Section
+  // Admin Templates Section
+  {
+    id: "admin-templates-1",
+    name: "Client Setup - Admin Tasks",
+    description:
+      "This is a template for setting up a new client in our systems. It includes a list of admin tasks that need to be completed.",
+    category: "Admin Templates",
+    icon: PersonStanding,
+    color: getRandomColor(),
+    files: [
+      { name: "Admin Tasks.pdf", url: "knowledge/Admin Templates/Admin Tasks-2.pdf", type: "pdf" },
+    ],
+
+  },
+  {
+    id: "admin-templates-2",
+    name: "Agent Nomination Instructions - Integritas",
+    description:
+      "This document provides instructions for nominating Integritas as your tax agent. It includes a list of tasks that need to be completed.",
+    category: "Admin Templates",
+    icon: PersonStanding,
+    color: getRandomColor(),
+    files: [
+      { name: "IAA-Agent Nomination Instructions", url: "knowledge/Admin Templates/Agent Nomination - Integritas.pdf", type: "pdf" },
+    ],
+
+  },
+  {
+    id: "admin-templates-3",
+    name: "Agent Nomination Instructions - Taxtalk",
+    description:
+      "This document provides instructions for nominating Taxtalk as your tax agent. It includes a list of tasks that need to be completed.",
+    category: "Admin Templates",
+    icon: PersonStanding,
+    color: getRandomColor(),
+    files: [
+      { name: "TT-Agent Nomination Instructions", url: "knowledge/Admin Templates/Agent Nomination - Taxtalk.pdf", type: "pdf" },
+    ],
+
+  },
+  {
+    id: "admin-templates-4",
+    name: "ATO Correspondence Instructions",
+    description:
+      "These are the instructions for managing ATO correspondence. It includes the process that the client needs to follow when they receive a letter from the ATO.",
+    category: "Admin Templates",
+    icon: PersonStanding,
+    color: getRandomColor(),
+    files: [
+      { name: "ATO correspondence- How you will receive it.pdf", url: "knowledge/Admin Templates/ATO correspondence- How you will receive it.pdf", type: "pdf" },
+    ],
+
+  },
   // Bookkeeping Template Section
   // Calculators Template Section
   // Compliance Template Section
+  {
+    id: "compliance-1",
+    name: "ASIC 201 - Company Registration Form",
+    description:
+      "This is the ASIC Form 201 for registering a company. It also includes the instructions to complete the form in a fillable PDF format.",
+    category: "Compliance",
+    icon: UserRoundCheck,
+    color: getRandomColor(),
+    files: [
+      { name: "ASIC 201 Application Form.pdf", url: "knowledge/Compliance/ASIC 201 Application Form.pdf", type: "pdf" },
+      { name: "Instruction - ASIC 201 Application Form.pdf", url: "knowledge/Compliance/Instructions - ASIC 201 Application Form.pdf", type: "pdf" },
+
+    ],
+
+  },
   // Insurance Template Section
   // Investments Template Section
   // Invoicing Template Section
   // Legislation Template Section
   // Lodgements Template Section
+  {
+    id: "lodgements-1",
+    name: "Agent Deferral Application",
+    description:
+      "This is the form to apply for a deferral of lodgement of activity statements or other forms.",
+    category: "Lodgements",
+    icon: CloudUpload,
+    color: getRandomColor(),
+    files: [
+      { name: "Agent Deferral Application.xlsx", url: "knowledge/Lodgements/Agent Deferral Application.xlsx", type: "xlsx" },
+
+    ],
+
+  },
   // Payroll Template Section
   // Practice Management Template Section
   {
@@ -272,7 +359,7 @@ export const integrations: Integration[] = [
     icon: MonitorCog,
     color: getRandomColor(),
     links: [
-      { name: "Open Fiscal Finance", url: "https://fsdb2.com/software/html5.html?user=taxtalk&pwd=3b78zw" },
+      { name: "Open Fiscal Finance", url: "https://fsdb2.com/software/html5.html" },
     ],
   },
   // Regulations Template Section
@@ -280,7 +367,32 @@ export const integrations: Integration[] = [
   // Software Template Section
   // Superannuation Template Section
   // Taxation Template Section
+  {
+    id: "taxation-1",
+    name: "AirBNB Tax Guide",
+    description:
+      "This guide provides information on how to report your income and expenses from renting out your property on AirBNB.",
+    category: "Taxation",
+    icon: PiggyBank,
+    color: getRandomColor(),
+    files: [
+      { name: "Airbnb Tax guide.pdf", url: "knowledge/Taxation/Airbnb Tax guide.pdf", type: "pdf" },
+    ],
 
+  },
+  {
+    id: "taxation-2",
+    name: "Record Keeping",
+    description:
+      "This document provides information on the record keeping requirements for individuals and businesses in order to meet their tax obligations.",
+    category: "Taxation",
+    icon: PiggyBank,
+    color: getRandomColor(),
+    files: [
+      { name: "ATO Advise for record keeping.pdf", url: "knowledge/Taxation/ATO Advise for record keeping.pdf", type: "pdf" },
+    ],
+
+  },
   // Useful Links Template Section
     {
     id: "useful-links-1",
@@ -318,7 +430,18 @@ export const integrations: Integration[] = [
       { name: "Open Website", url: "https://morganwealth.com.au" },
     ],
   },
-
+  {
+    id: "useful-links-4",
+    name: "Calendly Appointments - Domenic ",
+    description:
+      "Book an appointment with Domenic using the Calendly booking system.",
+    category: "Useful Links",
+    icon: Globe,
+    color: getRandomColor(),
+    links: [
+      { name: "Book an appointment", url: "https://calendly.com/taxtalkdb" },
+    ],
+  },
 
 
 
