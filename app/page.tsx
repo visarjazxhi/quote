@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Signature, LucideLink, Pickaxe, Mail, ShieldQuestion } from "lucide-react";
+import { Signature, Pickaxe, Mail, LibraryBig, LucideHandCoins } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
@@ -27,7 +27,7 @@ export default function Home() {
                 <CardTitle className="text-2xl font-semibold text-gray-800">
                   Quote estimation
                 </CardTitle>
-                <Badge variant="success">Functional</Badge>
+                {/* <Badge variant="success">Functional</Badge> */}
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-center text-gray-600">
@@ -47,7 +47,7 @@ export default function Home() {
                 <CardTitle className="text-2xl font-semibold text-gray-800">
                   Email templates
                 </CardTitle>
-                  <Badge variant="default">Work in progress</Badge>
+                  {/* <Badge variant="default">Done</Badge> */}
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-center text-gray-600">
@@ -58,41 +58,41 @@ export default function Home() {
             </Card>
           </Link>
 
-          <Link href="/priority" className="flex items-center space-x-2">
+          <Link href="/knowledge_bank" className="flex items-center space-x-2">
             <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader className="flex flex-col items-center">
-                <div className="rounded-full bg-green-100 p-3 mb-4">
-                  <ShieldQuestion className="h-6 w-6 text-green-600" />
+                <div className="rounded-full bg-rose-100 p-3 mb-4">
+                  <LibraryBig className="h-6 w-6 text-rose-600" />
                 </div>
                 <CardTitle className="text-2xl font-semibold text-gray-800">
-                  Eisenhower Matrix
+                  Knowledge Bank
                 </CardTitle>
                   <Badge variant="default">Work in progress</Badge>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-center text-gray-600">
-                  Important tools and calculators for our practices to assist
-                  with different tasks.
+                  A collection of knowledge articles and resources for our
+                  practice and clients.
                 </CardDescription>
               </CardContent>
             </Card>
           </Link>
 
-          <Link href="#" className="flex items-center space-x-2">
+          <Link href="/finance" className="flex items-center space-x-2">
             <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader className="flex flex-col items-center">
                 <div className="rounded-full bg-purple-100 p-3 mb-4">
-                  <LucideLink className="h-6 w-6 text-purple-600" />
+                  <LucideHandCoins className="h-6 w-6 text-purple-600" />
                 </div>
                 <CardTitle className="text-2xl font-semibold text-gray-800">
-                  Links and shortcuts
+                  Finance Tracker
                 </CardTitle>
-                <Badge variant="destructive">Not started yet</Badge>
+                <Badge variant="default">Work in progress</Badge>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-center text-gray-600">
-                  A collection of links and shortcuts of the website and
-                  services we use.
+                  A platform to manage the finance of the practice. Track
+                  expenses, income, and savings.
                 </CardDescription>
               </CardContent>
             </Card>

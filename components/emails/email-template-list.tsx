@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { EmailTemplateCard } from "@/components/emails/email-template-card";
 import { EmailTemplateModal } from "@/components/emails/email-template-modal";
 import type { EmailTemplate } from "@/types/email-template";
-import { emailTemplates } from "./templates";
+import { emailTemplates } from "../../data/email_templates";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
