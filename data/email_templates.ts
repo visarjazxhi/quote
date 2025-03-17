@@ -6,8 +6,8 @@ import { EmailTemplate } from "@/types/email-template";
     subject: "",
     body: "",
     attachments: [
-      { name: "", url: "/attachments/" },
-      { name: "", url: "/attachments/" },
+      { name: "", url: "/email_templates/" },
+      { name: "", url: "/email_templates/" },
     ],
     category: "Admin",
   },
@@ -109,7 +109,7 @@ We appreciate your prompt attention to this, as it helps us ensure a smooth and 
 
   `,
   attachments: [
-    { name: "Agent Nomination Instructions", url: "/attachments/admin/Agent Nomination Instructions.pdf" },
+    { name: "Agent Nomination Instructions", url: "/email_templates/admin/Agent Nomination Instructions.pdf" },
   ],
   category: "Admin",
 },
@@ -188,7 +188,7 @@ If there are any changes to your circumstances in the meantime, or if you have a
 Best regards,
   `,
   attachments: [
-    { name: "ATO Debt Plan", url: "/attachments/bookkeeping/ATO Debt Plan Arrangment.docx" },
+    { name: "ATO Debt Plan", url: "/email_templates/bookkeeping/ATO Debt Plan Arrangment.docx" },
 
   ],
   category: "Bookkeeping",
@@ -364,9 +364,9 @@ Best regards,
 
   `,
   attachments: [
-    { name: "Constractors Super Fund", url: "/attachments/practice/Contractors Super Fund Details.xlsx" },
-    { name: "Employees Personal Detail Form", url: "/attachments/practice/Employees Personal Detail Form (new).xlsx" },
-    { name: "TFN Declaration Form", url: "/attachments/practice/TFN_declaration_form_N3092.pdf" },
+    { name: "Constractors Super Fund", url: "/email_templates/practice/Contractors Super Fund Details.xlsx" },
+    { name: "Employees Personal Detail Form", url: "/email_templates/practice/Employees Personal Detail Form (new).xlsx" },
+    { name: "TFN Declaration Form", url: "/email_templates/practice/TFN_declaration_form_N3092.pdf" },
   ],
   category: "Practice",
 },
@@ -382,8 +382,8 @@ Thank you kindly for your assistance with this matter.
 
   `,
   attachments: [
-    { name: "Ethical Clearance Letter", url: "/attachments/practice/Ethical Clearance Letter.docx" },
-    { name: "Worksheet", url: "/attachments/Worksheet.xlsx" },
+    { name: "Ethical Clearance Letter", url: "/email_templates/practice/Ethical Clearance Letter.docx" },
+    { name: "Worksheet", url: "/email_templates/Worksheet.xlsx" },
   ],
   category: "Practice",
 },
@@ -399,7 +399,7 @@ Please find attached the ethical letter response for  _______________________.
 
   `,
   attachments: [
-    { name: "Ethical Letter - No Objection", url: "/attachments/practice/Ethical Letter no.docx" },
+    { name: "Ethical Letter - No Objection", url: "/email_templates/practice/Ethical Letter no.docx" },
   ],
   category: "Practice",
 },
@@ -413,7 +413,7 @@ Thank you kindly for your assistance with this matter.
 
   `,
   attachments: [
-    { name: "Ethical Letter - No Objection", url: "/attachments/practice/Ethical Letter.docx" },
+    { name: "Ethical Letter - No Objection", url: "/email_templates/practice/Ethical Letter.docx" },
   ],
   category: "Practice",
 },
@@ -431,8 +431,8 @@ Best regards,
 
   `,
   attachments: [
-    { name: "IAA Fees", url: "/attachments/practice/IAA Fees.pdf" },
-    { name: "IAA Packages", url: "/attachments/practice/IAA Packages.pdf" },
+    { name: "IAA Fees", url: "/email_templates/practice/IAA Fees.pdf" },
+    { name: "IAA Packages", url: "/email_templates/practice/IAA Packages.pdf" },
   ],
   category: "Practice",
 },
@@ -720,8 +720,8 @@ Let us know if you require any further assistance.
 
   `,
   attachments: [
-    { name: "TFN Application Form", url: "/attachments/setup/IND-TFN- NAT2628.pdf" },
-    { name: "TFN Application Electronic form", url: "/attachments/setup/TFN Application electronic form.pdf" },
+    { name: "TFN Application Form", url: "/email_templates/setup/IND-TFN- NAT2628.pdf" },
+    { name: "TFN Application Electronic form", url: "/email_templates/setup/TFN Application electronic form.pdf" },
   ],
   category: "Setup",
 },
@@ -1187,7 +1187,7 @@ Best regards,
 
   `,
   attachments: [
-    { name: "Fee Schedule", url: "/attachments/tax returns/TAXTALK PTY LTD FEE SCHEDULE.pdf" },
+    { name: "Fee Schedule", url: "/email_templates/tax returns/TAXTALK PTY LTD FEE SCHEDULE.pdf" },
   ],
   category: "Tax Returns",
 },

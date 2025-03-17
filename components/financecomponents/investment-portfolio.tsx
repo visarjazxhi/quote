@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Chart, ChartLegend, ChartLegendItem } from "@/components/ui/chart"
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts"
@@ -77,7 +76,7 @@ const investments = [
 ]
 
 export function InvestmentPortfolio() {
-  const [activeTab, setActiveTab] = useState("overview")
+
 
   const totalValue = portfolioAllocation.reduce((sum, item) => sum + item.value, 0)
   const totalGain = investments.reduce((sum, item) => sum + item.gain, 0)
@@ -127,7 +126,7 @@ export function InvestmentPortfolio() {
         </Card>
       </div>
 
-      <Tabs defaultValue="overview" onValueChange={setActiveTab} className="space-y-4">
+      <Tabs defaultValue="overview" className="space-y-4">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="holdings">Holdings</TabsTrigger>
