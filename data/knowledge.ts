@@ -1,4 +1,7 @@
 import {
+  Building,
+  ChartNoAxesCombined,
+  CheckCheck,
   CloudUpload,
   Globe,
   MonitorCog,
@@ -110,7 +113,18 @@ export const integrations: Integration[] = [
   // },
 
   // Advisory Template Section
-
+  {
+    id: "Advisory-1",
+    name: "BAS  Invoicing Preparation",
+    description:
+      "This document provides a step-by-step guide on how to prepare your BAS invoices. It includes a checklist of tasks that need to be completed.",
+    category: "Advisory",
+    icon: Building ,
+    color: getRandomColor(),
+    files: [
+      { name: "BAS  Invoicing Preparation.pdf", url: "knowledge/Advisory/BAS  Invoicing Preparation.pdf", type: "pdf" },
+    ],
+  },
 
 
   // Auditing Template Section
@@ -165,6 +179,18 @@ export const integrations: Integration[] = [
     files: [
       { name: "ATO correspondence- How you will receive it.pdf", url: "knowledge/Admin Templates/ATO correspondence- How you will receive it.pdf", type: "pdf" },
     ],
+  },
+  {
+    id: "admin-templates-5",
+    name: "Flexi Office Brochure",
+    description:
+      "This is the brochure for bookking an Office, it serves as a guide for the client to book an office space. This brochure can be printed and shared with the client.",
+    category: "Admin Templates",
+    icon: PersonStanding,
+    color: getRandomColor(),
+    files: [
+      { name: "Flexi Office Brochure.docx", url: "knowledge/Admin Templates/Flexi Office Brochure.docx", type: "docx" },
+    ],
 
   },
   // Bookkeeping Template Section
@@ -187,6 +213,43 @@ export const integrations: Integration[] = [
   },
   // Insurance Template Section
   // Investments Template Section
+  {
+    id: "investments-1",
+    name: "Borrowing costs schedule",
+    description:
+      "This is a schedule for recording the borrowing costs associated with an investment property. It includes a list of costs that can be claimed as a tax deduction.",
+    category: "Investments",
+    icon:ChartNoAxesCombined,
+    color: getRandomColor(),
+    files: [
+      { name: "Borrowing costs schedule.xlsx", url: "knowledge/Investments/Borrowing costs schedule.xlsx", type: "xlsx" },
+    ],
+  },
+  {
+    id: "investments-2",
+    name: "Budget Planner",
+    description:
+      "This is a budget planner template that can be used to track your income and expenses. It includes a list of common expenses and income sources.",
+    category: "Investments",
+    icon:ChartNoAxesCombined,
+    color: getRandomColor(),
+    files: [
+      { name: "Budget Planner.xlsx", url: "knowledge/Investments/Budget Planner.xlsx", type: "xlsx" },
+    ],
+  },
+  {
+    id: "investments-3",
+    name: "Capital Gain Tax Calculations",
+    description:
+      "This is a template for calculating the capital gains tax on the sale of an investment property. It includes a list of costs that can be claimed as a tax deduction.",
+    category: "Investments",
+    icon:ChartNoAxesCombined,
+    color: getRandomColor(),
+    files: [
+      { name: "Capital Gain Tax Calculations.xlsx", url: "knowledge/Investments/Capital Gain Tax Calculations.xlsx", type: "xlsx" },
+    ],
+  },
+
   // Invoicing Template Section
   // Legislation Template Section
   // Lodgements Template Section
@@ -364,6 +427,19 @@ export const integrations: Integration[] = [
   },
   // Regulations Template Section
   // Reporting Template Section
+  {
+    id: "reporting-1",
+    name: "Consolidated Tax Result",
+    description:
+      "This is a template for calculating the consolidated tax result for a group of companies. It includes a list of adjustments that need to be made to the accounting profit.",
+    category: "Reporting",
+    icon: CheckCheck,
+    color: getRandomColor(),
+    files: [
+      { name: "Consolidated Tax Result.xlsx", url: "knowledge/Reporting/Consolidated Tax Result.xlsx", type: "xlsx" },
+    ],
+
+  },
   // Software Template Section
   // Superannuation Template Section
   // Taxation Template Section

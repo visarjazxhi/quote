@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Signature, Pickaxe, Mail, LibraryBig, LucideHandCoins } from "lucide-react";
+import { Signature, Pickaxe, Mail, LibraryBig, LucideHandCoins, BookOpenText } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
@@ -101,13 +101,13 @@ export default function Home() {
           <Link href="#" className="flex items-center space-x-2">
             <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader className="flex flex-col items-center">
-                <div className="rounded-full bg-green-100 p-3 mb-4">
-                  <Pickaxe className="h-6 w-6 text-green-600" />
+                <div className="rounded-full bg-orange-100 p-3 mb-4">
+                  <BookOpenText className="h-6 w-6 text-orange-500" />
                 </div>
                 <CardTitle className="text-2xl font-semibold text-gray-800">
-                  Coming soon
+                  Income Tax Return Course
                 </CardTitle>
-                <Badge variant="destructive">Not started yet</Badge>
+                <Badge variant="orange">Coming Soon</Badge>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-center text-gray-600">
@@ -127,7 +127,7 @@ export default function Home() {
                 <CardTitle className="text-2xl font-semibold text-gray-800">
                   Coming soon
                 </CardTitle>
-                <Badge variant="destructive">Not started yet</Badge>
+                <Badge variant="success">Not started yet</Badge>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-center text-gray-600">
