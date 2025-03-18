@@ -67,7 +67,6 @@ export default function Home() {
                 <CardTitle className="text-2xl font-semibold text-gray-800">
                   Knowledge Bank
                 </CardTitle>
-                  <Badge variant="default">Work in progress</Badge>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-center text-gray-600">
