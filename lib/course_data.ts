@@ -1,0 +1,981 @@
+export const moduleData = [
+  {
+    id: "01",
+    title: "Module 01: Income",
+    description: "Learn about different types of income and their tax implications",
+    videoUrl: "/videos/module01.mp4",
+    pdfUrl: "/pdfs/module01.pdf",
+    type: "PDF Document",
+    completed: false,
+    quiz: {
+      questions: [
+        {
+          id: "m1q1",
+          text: "Which of the following is considered assessable income?",
+          options: [
+            { id: "m1q1a", text: "Gifts from family members" },
+            { id: "m1q1b", text: "Lottery winnings" },
+            { id: "m1q1c", text: "Salary and wages" },
+            { id: "m1q1d", text: "Inheritance" },
+          ],
+          correctOptionId: "m1q1c",
+        },
+        {
+          id: "m1q2",
+          text: "When is income generally assessable for tax purposes?",
+          options: [
+            { id: "m1q2a", text: "When it is earned" },
+            { id: "m1q2b", text: "When it is received" },
+            { id: "m1q2c", text: "When it is reported to the ATO" },
+            { id: "m1q2d", text: "When it is spent" },
+          ],
+          correctOptionId: "m1q2b",
+        },
+        {
+          id: "m1q3",
+          text: "Which of the following statements about income is true?",
+          options: [
+            { id: "m1q3a", text: "All income is taxable at the same rate" },
+            { id: "m1q3b", text: "Income from foreign sources is never taxable in Australia" },
+            { id: "m1q3c", text: "Different types of income may be taxed differently" },
+            { id: "m1q3d", text: "Income earned by minors is not taxable" },
+          ],
+          correctOptionId: "m1q3c",
+        },
+        {
+          id: "m1q4",
+          text: "Which income type is generally NOT considered assessable income?",
+          options: [
+            { id: "m1q4a", text: "Salary and wages" },
+            { id: "m1q4b", text: "Business income" },
+            { id: "m1q4c", text: "Genuine gifts" },
+            { id: "m1q4d", text: "Rental income" },
+          ],
+          correctOptionId: "m1q4c",
+        },
+        {
+          id: "m1q5",
+          text: "What is the tax treatment of a bonus received from your employer?",
+          options: [
+            { id: "m1q5a", text: "It is tax-free" },
+            { id: "m1q5b", text: "It is taxed at a flat rate of 15%" },
+            { id: "m1q5c", text: "It is included as part of your assessable income" },
+            { id: "m1q5d", text: "It is only taxable if over $10,000" },
+          ],
+          correctOptionId: "m1q5c",
+        },
+      ],
+    },
+  },
+  {
+    id: "02",
+    title: "Module 02: Deductions, Personal Services Income, Interest & Dividends",
+    description: "Understanding deductions and various income sources",
+    videoUrl: "/videos/module02.mp4",
+    pdfUrl: "/pdfs/module02.pdf",
+    type: "PDF Document",
+    completed: false,
+    quiz: {
+      questions: [
+        {
+          id: "m2q1",
+          text: "Which of the following is a general requirement for a deduction to be allowable?",
+          options: [
+            { id: "m2q1a", text: "The expense must be for personal use" },
+            { id: "m2q1b", text: "The expense must be incurred in gaining or producing assessable income" },
+            { id: "m2q1c", text: "The expense must be paid in cash" },
+            { id: "m2q1d", text: "The expense must be over $300" },
+          ],
+          correctOptionId: "m2q1b",
+        },
+        {
+          id: "m2q2",
+          text: "What is Personal Services Income (PSI)?",
+          options: [
+            { id: "m2q2a", text: "Income received from investments" },
+            { id: "m2q2b", text: "Income received mainly for your labor, skills, or expertise" },
+            { id: "m2q2c", text: "Income received from rental properties" },
+            { id: "m2q2d", text: "Income received from government benefits" },
+          ],
+          correctOptionId: "m2q2b",
+        },
+        {
+          id: "m2q3",
+          text: "How are fully franked dividends taxed?",
+          options: [
+            { id: "m2q3a", text: "They are tax-free" },
+            {
+              id: "m2q3b",
+              text: "They are included in your assessable income with a tax offset for the franking credits",
+            },
+            { id: "m2q3c", text: "They are taxed at a flat rate of 30%" },
+            { id: "m2q3d", text: "They are only taxable if over $1,000" },
+          ],
+          correctOptionId: "m2q3b",
+        },
+        {
+          id: "m2q4",
+          text: "Which of the following expenses is generally NOT deductible?",
+          options: [
+            { id: "m2q4a", text: "Work-related travel expenses" },
+            { id: "m2q4b", text: "Home to work travel costs" },
+            { id: "m2q4c", text: "Professional development courses" },
+            { id: "m2q4d", text: "Work-specific protective clothing" },
+          ],
+          correctOptionId: "m2q4b",
+        },
+        {
+          id: "m2q5",
+          text: "When is interest income assessable?",
+          options: [
+            { id: "m2q5a", text: "When it is credited to your account" },
+            { id: "m2q5b", text: "Only when you withdraw it" },
+            { id: "m2q5c", text: "Only if it exceeds $1,000" },
+            { id: "m2q5d", text: "Only at the end of the financial year" },
+          ],
+          correctOptionId: "m2q5a",
+        },
+      ],
+    },
+  },
+  {
+    id: "03",
+    title: "Module 03: Tax Offsets, Medicare Levy & Medicare Levy Surcharge",
+    description: "Learn about tax offsets and Medicare levies",
+    videoUrl: "/videos/module03.mp4",
+    pdfUrl: "/pdfs/module03.pdf",
+    type: "PDF Document",
+    completed: false,
+    quiz: {
+      questions: [
+        {
+          id: "m3q1",
+          text: "What is the difference between a tax deduction and a tax offset?",
+          options: [
+            { id: "m3q1a", text: "There is no difference" },
+            {
+              id: "m3q1b",
+              text: "A tax deduction reduces your assessable income, while a tax offset directly reduces your tax payable",
+            },
+            {
+              id: "m3q1c",
+              text: "A tax offset reduces your assessable income, while a tax deduction directly reduces your tax payable",
+            },
+            { id: "m3q1d", text: "Tax deductions are for individuals, while tax offsets are for businesses" },
+          ],
+          correctOptionId: "m3q1b",
+        },
+        {
+          id: "m3q2",
+          text: "Who is exempt from paying the Medicare Levy?",
+          options: [
+            { id: "m3q2a", text: "Everyone must pay the Medicare Levy" },
+            { id: "m3q2b", text: "People with private health insurance" },
+            { id: "m3q2c", text: "Certain low-income earners and other exempt categories" },
+            { id: "m3q2d", text: "Only business owners" },
+          ],
+          correctOptionId: "m3q2c",
+        },
+        {
+          id: "m3q3",
+          text: "What is the standard Medicare Levy rate?",
+          options: [
+            { id: "m3q3a", text: "1%" },
+            { id: "m3q3b", text: "1.5%" },
+            { id: "m3q3c", text: "2%" },
+            { id: "m3q3d", text: "2.5%" },
+          ],
+          correctOptionId: "m3q3c",
+        },
+        {
+          id: "m3q4",
+          text: "When does the Medicare Levy Surcharge apply?",
+          options: [
+            { id: "m3q4a", text: "To everyone who pays the Medicare Levy" },
+            { id: "m3q4b", text: "To high-income earners who don't have appropriate private health insurance" },
+            { id: "m3q4c", text: "To anyone with private health insurance" },
+            { id: "m3q4d", text: "To low-income earners only" },
+          ],
+          correctOptionId: "m3q4b",
+        },
+        {
+          id: "m3q5",
+          text: "Which of the following is a common tax offset?",
+          options: [
+            { id: "m3q5a", text: "Work-related expenses offset" },
+            { id: "m3q5b", text: "Low and middle income tax offset" },
+            { id: "m3q5c", text: "Rental property offset" },
+            { id: "m3q5d", text: "Investment income offset" },
+          ],
+          correctOptionId: "m3q5b",
+        },
+      ],
+    },
+  },
+  {
+    id: "04",
+    title: "Module 04: Decline in Value",
+    description: "Understanding depreciation and asset value decline",
+    videoUrl: "/videos/module04.mp4",
+    pdfUrl: "/pdfs/module04.pdf",
+    type: "PDF Document",
+    completed: false,
+    quiz: {
+      questions: [
+        {
+          id: "m4q1",
+          text: "What is 'decline in value' in tax terms?",
+          options: [
+            { id: "m4q1a", text: "The decrease in market value of an asset" },
+            { id: "m4q1b", text: "The tax deduction for the cost of an asset over time (depreciation)" },
+            { id: "m4q1c", text: "The loss incurred when selling an asset" },
+            { id: "m4q1d", text: "The reduction in business profits" },
+          ],
+          correctOptionId: "m4q1b",
+        },
+        {
+          id: "m4q2",
+          text: "Which depreciation method generally results in higher deductions in the early years?",
+          options: [
+            { id: "m4q2a", text: "Prime cost method" },
+            { id: "m4q2b", text: "Diminishing value method" },
+            { id: "m4q2c", text: "Straight-line method" },
+            { id: "m4q2d", text: "Accelerated method" },
+          ],
+          correctOptionId: "m4q2b",
+        },
+        {
+          id: "m4q3",
+          text: "What is the effective life of an asset?",
+          options: [
+            { id: "m4q3a", text: "The period the asset is actually used" },
+            { id: "m4q3b", text: "The period the asset is expected to be used to produce income" },
+            { id: "m4q3c", text: "The warranty period of the asset" },
+            { id: "m4q3d", text: "The period until the asset needs repair" },
+          ],
+          correctOptionId: "m4q3b",
+        },
+        {
+          id: "m4q4",
+          text: "Which assets cannot be depreciated?",
+          options: [
+            { id: "m4q4a", text: "Office equipment" },
+            { id: "m4q4b", text: "Motor vehicles" },
+            { id: "m4q4c", text: "Land" },
+            { id: "m4q4d", text: "Computers" },
+          ],
+          correctOptionId: "m4q4c",
+        },
+        {
+          id: "m4q5",
+          text: "What is an immediate deduction for small businesses?",
+          options: [
+            {
+              id: "m4q5a",
+              text: "The ability to claim the full cost of certain assets as a tax deduction in the year they are purchased",
+            },
+            { id: "m4q5b", text: "A tax offset for small businesses" },
+            { id: "m4q5c", text: "A reduction in the GST payable" },
+            { id: "m4q5d", text: "A special depreciation method only for small businesses" },
+          ],
+          correctOptionId: "m4q5a",
+        },
+      ],
+    },
+  },
+  {
+    id: "05",
+    title: "Module 05: Motor Vehicles & Travel",
+    description: "Tax implications for vehicles and travel expenses",
+    videoUrl: "/videos/module05.mp4",
+    pdfUrl: "/pdfs/module05.pdf",
+    type: "PDF Document",
+    completed: false,
+    quiz: {
+      questions: [
+        {
+          id: "m5q1",
+          text: "Which method can be used to claim motor vehicle expenses?",
+          options: [
+            { id: "m5q1a", text: "Only the logbook method" },
+            { id: "m5q1b", text: "Only the cents per kilometer method" },
+            { id: "m5q1c", text: "Either the logbook method or the cents per kilometer method" },
+            { id: "m5q1d", text: "Neither, motor vehicle expenses are not deductible" },
+          ],
+          correctOptionId: "m5q1c",
+        },
+        {
+          id: "m5q2",
+          text: "What is the maximum number of kilometers that can be claimed using the cents per kilometer method?",
+          options: [
+            { id: "m5q2a", text: "1,000 km" },
+            { id: "m5q2b", text: "5,000 km" },
+            { id: "m5q2c", text: "10,000 km" },
+            { id: "m5q2d", text: "There is no limit" },
+          ],
+          correctOptionId: "m5q2b",
+        },
+        {
+          id: "m5q3",
+          text: "Which of the following travel expenses is generally deductible?",
+          options: [
+            { id: "m5q3a", text: "Travel from home to your regular workplace" },
+            { id: "m5q3b", text: "Travel between two workplaces" },
+            { id: "m5q3c", text: "Travel for personal reasons" },
+            { id: "m5q3d", text: "Travel for a vacation" },
+          ],
+          correctOptionId: "m5q3b",
+        },
+        {
+          id: "m5q4",
+          text: "What records must be kept when using the logbook method?",
+          options: [
+            { id: "m5q4a", text: "Only fuel receipts" },
+            { id: "m5q4b", text: "A valid logbook, odometer readings, and records of all car expenses" },
+            { id: "m5q4c", text: "Just the purchase invoice of the vehicle" },
+            { id: "m5q4d", text: "No records are required" },
+          ],
+          correctOptionId: "m5q4b",
+        },
+        {
+          id: "m5q5",
+          text: "When is travel between home and work deductible?",
+          options: [
+            { id: "m5q5a", text: "Always" },
+            { id: "m5q5b", text: "Never" },
+            { id: "m5q5c", text: "When you carry bulky tools or equipment that cannot be stored at work" },
+            { id: "m5q5d", text: "Only if you live more than 20km from work" },
+          ],
+          correctOptionId: "m5q5c",
+        },
+      ],
+    },
+  },
+  {
+    id: "06",
+    title: "Module 06: Self Education Tax Offsets",
+    description: "Learn about education-related tax benefits",
+    videoUrl: "/videos/module06.mp4",
+    pdfUrl: "/pdfs/module06.pdf",
+    type: "PDF Document",
+    completed: false,
+    quiz: {
+      questions: [
+        {
+          id: "m6q1",
+          text: "When are self-education expenses deductible?",
+          options: [
+            { id: "m6q1a", text: "When the education is related to your current employment" },
+            { id: "m6q1b", text: "When the education is for personal interest" },
+            { id: "m6q1c", text: "When the education is to help you get a new job in a different field" },
+            { id: "m6q1d", text: "Self-education expenses are never deductible" },
+          ],
+          correctOptionId: "m6q1a",
+        },
+        {
+          id: "m6q2",
+          text: "Which of the following self-education expenses is generally deductible?",
+          options: [
+            { id: "m6q2a", text: "Childcare expenses while attending classes" },
+            { id: "m6q2b", text: "Course fees, textbooks, and stationery" },
+            { id: "m6q2c", text: "Meals while studying at home" },
+            { id: "m6q2d", text: "Home internet costs for general use" },
+          ],
+          correctOptionId: "m6q2b",
+        },
+        {
+          id: "m6q3",
+          text: "What is the '$250 reduction' in relation to self-education expenses?",
+          options: [
+            { id: "m6q3a", text: "A tax offset of $250" },
+            { id: "m6q3b", text: "The first $250 of self-education expenses are not deductible" },
+            { id: "m6q3c", text: "A standard deduction of $250" },
+            { id: "m6q3d", text: "A limit on how much can be claimed" },
+          ],
+          correctOptionId: "m6q3b",
+        },
+        {
+          id: "m6q4",
+          text: "Can you claim a deduction for a course that will help you get a job in a new field?",
+          options: [
+            { id: "m6q4a", text: "Yes, all education expenses are deductible" },
+            { id: "m6q4b", text: "Yes, if the course is provided by a registered training organization" },
+            { id: "m6q4c", text: "No, the course must relate to your current income-earning activities" },
+            { id: "m6q4d", text: "Yes, but only if the course costs more than $1,000" },
+          ],
+          correctOptionId: "m6q4c",
+        },
+        {
+          id: "m6q5",
+          text: "Which of the following is NOT a deductible self-education expense?",
+          options: [
+            { id: "m6q5a", text: "Computer depreciation for study purposes" },
+            { id: "m6q5b", text: "Student union fees" },
+            { id: "m6q5c", text: "Travel between work and the place of education" },
+            { id: "m6q5d", text: "Expenses for a course that is unrelated to your current employment" },
+          ],
+          correctOptionId: "m6q5d",
+        },
+      ],
+    },
+  },
+  {
+    id: "07",
+    title: "Module 07: ETPs, Annuities & Other Income",
+    description: "Understanding employment termination payments and annuities",
+    videoUrl: "/videos/module07.mp4",
+    pdfUrl: "/pdfs/module07.pdf",
+    type: "PDF Document",
+    completed: false,
+    quiz: {
+      questions: [
+        {
+          id: "m7q1",
+          text: "What is an Employment Termination Payment (ETP)?",
+          options: [
+            { id: "m7q1a", text: "Regular salary payments" },
+            { id: "m7q1b", text: "Payments received when employment is terminated" },
+            { id: "m7q1c", text: "Payments for annual leave" },
+            { id: "m7q1d", text: "Payments for long service leave" },
+          ],
+          correctOptionId: "m7q1b",
+        },
+        {
+          id: "m7q2",
+          text: "How are genuine redundancy payments taxed?",
+          options: [
+            { id: "m7q2a", text: "They are fully taxable at your marginal tax rate" },
+            { id: "m7q2b", text: "They are tax-free up to a limit, with the excess taxed concessionally" },
+            { id: "m7q2c", text: "They are completely tax-free" },
+            { id: "m7q2d", text: "They are taxed at a flat rate of 30%" },
+          ],
+          correctOptionId: "m7q2b",
+        },
+        {
+          id: "m7q3",
+          text: "What is an annuity?",
+          options: [
+            { id: "m7q3a", text: "A lump sum payment" },
+            { id: "m7q3b", text: "A regular payment stream, usually from a superannuation or insurance company" },
+            { id: "m7q3c", text: "A one-off government payment" },
+            { id: "m7q3d", text: "A type of employment benefit" },
+          ],
+          correctOptionId: "m7q3b",
+        },
+        {
+          id: "m7q4",
+          text: "How is the taxable component of an ETP generally taxed?",
+          options: [
+            { id: "m7q4a", text: "At your marginal tax rate" },
+            { id: "m7q4b", text: "It is tax-free" },
+            { id: "m7q4c", text: "At concessional rates up to certain caps" },
+            { id: "m7q4d", text: "At a flat rate of 45%" },
+          ],
+          correctOptionId: "m7q4c",
+        },
+        {
+          id: "m7q5",
+          text: "Which of the following is considered 'other income' for tax purposes?",
+          options: [
+            { id: "m7q5a", text: "Salary and wages" },
+            { id: "m7q5b", text: "Foreign exchange gains" },
+            { id: "m7q5c", text: "Dividend income" },
+            { id: "m7q5d", text: "Rental income" },
+          ],
+          correctOptionId: "m7q5b",
+        },
+      ],
+    },
+  },
+  {
+    id: "08",
+    title: "Module 08: Rental Properties",
+    description: "Tax implications for rental property owners",
+    videoUrl: "/videos/module08.mp4",
+    pdfUrl: "/pdfs/module08.pdf",
+    type: "PDF Document",
+    completed: false,
+    quiz: {
+      questions: [
+        {
+          id: "m8q1",
+          text: "Which of the following rental property expenses is generally deductible in the year it is incurred?",
+          options: [
+            { id: "m8q1a", text: "Cost of the building" },
+            { id: "m8q1b", text: "Renovation costs" },
+            { id: "m8q1c", text: "Interest on the mortgage" },
+            { id: "m8q1d", text: "Cost of new appliances" },
+          ],
+          correctOptionId: "m8q1c",
+        },
+        {
+          id: "m8q2",
+          text: "What is negative gearing?",
+          options: [
+            { id: "m8q2a", text: "When rental income exceeds rental expenses" },
+            { id: "m8q2b", text: "When rental expenses exceed rental income" },
+            { id: "m8q2c", text: "When the property decreases in value" },
+            { id: "m8q2d", text: "When you have multiple rental properties" },
+          ],
+          correctOptionId: "m8q2b",
+        },
+        {
+          id: "m8q3",
+          text: "How is capital works deduction (building depreciation) calculated?",
+          options: [
+            { id: "m8q3a", text: "At 2.5% per year for 40 years for residential rental properties" },
+            { id: "m8q3b", text: "At 10% per year for 10 years" },
+            { id: "m8q3c", text: "At 5% per year for 20 years" },
+            { id: "m8q3d", text: "It varies based on the property's market value" },
+          ],
+          correctOptionId: "m8q3a",
+        },
+        {
+          id: "m8q4",
+          text: "Can you claim a deduction for travel expenses to inspect your rental property?",
+          options: [
+            { id: "m8q4a", text: "Yes, all travel expenses are deductible" },
+            {
+              id: "m8q4b",
+              text: "No, travel expenses to inspect residential rental properties are not deductible for most individuals",
+            },
+            { id: "m8q4c", text: "Only if the property is more than 100km away" },
+            { id: "m8q4d", text: "Only if you own multiple properties" },
+          ],
+          correctOptionId: "m8q4b",
+        },
+        {
+          id: "m8q5",
+          text: "How are repairs different from improvements for tax purposes?",
+          options: [
+            { id: "m8q5a", text: "There is no difference" },
+            {
+              id: "m8q5b",
+              text: "Repairs restore something to its original condition and are deductible immediately, while improvements provide something new or better and are depreciated",
+            },
+            { id: "m8q5c", text: "Repairs cost less than improvements" },
+            { id: "m8q5d", text: "Repairs are not deductible, but improvements are" },
+          ],
+          correctOptionId: "m8q5b",
+        },
+      ],
+    },
+  },
+  {
+    id: "09",
+    title: "Module 09: Capital Gains",
+    description: "Understanding capital gains tax and its applications",
+    videoUrl: "/videos/module09.mp4",
+    pdfUrl: "/pdfs/module09.pdf",
+    type: "PDF Document",
+    completed: false,
+    quiz: {
+      questions: [
+        {
+          id: "m9q1",
+          text: "What is a capital gain?",
+          options: [
+            { id: "m9q1a", text: "Any profit made from selling an asset" },
+            { id: "m9q1b", text: "The difference between the cost base of an asset and its sale proceeds" },
+            { id: "m9q1c", text: "Income from investments" },
+            { id: "m9q1d", text: "Rental income from properties" },
+          ],
+          correctOptionId: "m9q1b",
+        },
+        {
+          id: "m9q2",
+          text: "What discount is available for capital gains on assets held for more than 12 months by individuals?",
+          options: [
+            { id: "m9q2a", text: "No discount" },
+            { id: "m9q2b", text: "25% discount" },
+            { id: "m9q2c", text: "50% discount" },
+            { id: "m9q2d", text: "100% discount (tax-free)" },
+          ],
+          correctOptionId: "m9q2c",
+        },
+        {
+          id: "m9q3",
+          text: "Which of the following assets is generally exempt from Capital Gains Tax (CGT)?",
+          options: [
+            { id: "m9q3a", text: "Investment properties" },
+            { id: "m9q3b", text: "Shares in public companies" },
+            { id: "m9q3c", text: "Main residence (principal place of residence)" },
+            { id: "m9q3d", text: "Collectibles worth more than $500" },
+          ],
+          correctOptionId: "m9q3c",
+        },
+        {
+          id: "m9q4",
+          text: "What is the 'cost base' of an asset for CGT purposes?",
+          options: [
+            { id: "m9q4a", text: "The original purchase price only" },
+            { id: "m9q4b", text: "The market value of the asset" },
+            { id: "m9q4c", text: "The purchase price plus certain costs of ownership and improvements" },
+            { id: "m9q4d", text: "The sale price minus the purchase price" },
+          ],
+          correctOptionId: "m9q4c",
+        },
+        {
+          id: "m9q5",
+          text: "How are capital losses treated for tax purposes?",
+          options: [
+            { id: "m9q5a", text: "They can be offset against any income" },
+            { id: "m9q5b", text: "They can only be offset against capital gains" },
+            { id: "m9q5c", text: "They are not recognized for tax purposes" },
+            { id: "m9q5d", text: "They provide a tax refund" },
+          ],
+          correctOptionId: "m9q5b",
+        },
+      ],
+    },
+  },
+  {
+    id: "10",
+    title: "Module 10: Foreign Income and Trusts",
+    description: "Tax treatment of foreign income and trust structures",
+    videoUrl: "/videos/module10.mp4",
+    pdfUrl: "/pdfs/module10.pdf",
+    type: "PDF Document",
+    completed: false,
+    quiz: {
+      questions: [
+        {
+          id: "m10q1",
+          text: "How is foreign income generally taxed for Australian residents?",
+          options: [
+            { id: "m10q1a", text: "It is exempt from Australian tax" },
+            { id: "m10q1b", text: "It is taxed at a flat rate of 15%" },
+            {
+              id: "m10q1c",
+              text: "It is included in your assessable income, with a foreign income tax offset for foreign tax paid",
+            },
+            { id: "m10q1d", text: "It is only taxable if transferred to Australia" },
+          ],
+          correctOptionId: "m10q1c",
+        },
+        {
+          id: "m10q2",
+          text: "What is a foreign income tax offset?",
+          options: [
+            { id: "m10q2a", text: "An exemption from paying tax on foreign income" },
+            { id: "m10q2b", text: "A credit for foreign tax paid on income that is also taxed in Australia" },
+            { id: "m10q2c", text: "A deduction for foreign travel expenses" },
+            { id: "m10q2d", text: "A special tax rate for foreign income" },
+          ],
+          correctOptionId: "m10q2b",
+        },
+        {
+          id: "m10q3",
+          text: "How is income from a discretionary trust typically taxed?",
+          options: [
+            { id: "m10q3a", text: "It is taxed in the hands of the beneficiaries who receive distributions" },
+            { id: "m10q3b", text: "It is always taxed at the top marginal rate" },
+            { id: "m10q3c", text: "It is tax-free" },
+            { id: "m10q3d", text: "It is taxed at a flat rate of 30%" },
+          ],
+          correctOptionId: "m10q3a",
+        },
+        {
+          id: "m10q4",
+          text: "What happens to trust income that is not distributed to beneficiaries?",
+          options: [
+            { id: "m10q4a", text: "It is not taxed" },
+            { id: "m10q4b", text: "It is taxed in the hands of the trustee at the highest marginal rate" },
+            { id: "m10q4c", text: "It is carried forward to the next year" },
+            { id: "m10q4d", text: "It is taxed at the company tax rate" },
+          ],
+          correctOptionId: "m10q4b",
+        },
+        {
+          id: "m10q5",
+          text: "Which of the following statements about Controlled Foreign Companies (CFC) is true?",
+          options: [
+            { id: "m10q5a", text: "They are always tax-free structures" },
+            {
+              id: "m10q5b",
+              text: "Australian residents may be taxed on their share of a CFC's income even if not distributed",
+            },
+            { id: "m10q5c", text: "They can only be established in tax haven countries" },
+            { id: "m10q5d", text: "They are illegal under Australian law" },
+          ],
+          correctOptionId: "m10q5b",
+        },
+      ],
+    },
+  },
+  {
+    id: "11",
+    title: "Module 11: Residency",
+    description: "Tax residency status and its implications",
+    videoUrl: "/videos/module11.mp4",
+    pdfUrl: "/pdfs/module11.pdf",
+    type: "PDF Document",
+    completed: false,
+    quiz: {
+      questions: [
+        {
+          id: "m11q1",
+          text: "What is the primary test for determining tax residency in Australia?",
+          options: [
+            { id: "m11q1a", text: "The citizenship test" },
+            { id: "m11q1b", text: "The resides test (where you ordinarily live)" },
+            { id: "m11q1c", text: "The 183-day test only" },
+            { id: "m11q1d", text: "Having an Australian bank account" },
+          ],
+          correctOptionId: "m11q1b",
+        },
+        {
+          id: "m11q2",
+          text: "How are Australian tax residents taxed?",
+          options: [
+            { id: "m11q2a", text: "On worldwide income" },
+            { id: "m11q2b", text: "Only on Australian-sourced income" },
+            { id: "m11q2c", text: "On 50% of their worldwide income" },
+            { id: "m11q2d", text: "At a flat rate regardless of income" },
+          ],
+          correctOptionId: "m11q2a",
+        },
+        {
+          id: "m11q3",
+          text: "How are foreign tax residents generally taxed in Australia?",
+          options: [
+            { id: "m11q3a", text: "On worldwide income" },
+            { id: "m11q3b", text: "Only on Australian-sourced income" },
+            { id: "m11q3c", text: "They are exempt from Australian tax" },
+            { id: "m11q3d", text: "At a flat rate of 10%" },
+          ],
+          correctOptionId: "m11q3b",
+        },
+        {
+          id: "m11q4",
+          text: "What is the 183-day test for tax residency?",
+          options: [
+            {
+              id: "m11q4a",
+              text: "If you're in Australia for 183 days or more in a financial year, you're automatically a non-resident",
+            },
+            {
+              id: "m11q4b",
+              text: "If you're in Australia for 183 days or more in a financial year, you may be a resident unless your usual home is overseas and you don't intend to live in Australia",
+            },
+            { id: "m11q4c", text: "You must be outside Australia for 183 days to be a non-resident" },
+            { id: "m11q4d", text: "It's a test that only applies to foreign citizens" },
+          ],
+          correctOptionId: "m11q4b",
+        },
+        {
+          id: "m11q5",
+          text: "What is a tax treaty (Double Tax Agreement)?",
+          options: [
+            { id: "m11q5a", text: "An agreement that always results in double taxation" },
+            { id: "m11q5b", text: "An agreement between countries that helps prevent double taxation and tax evasion" },
+            { id: "m11q5c", text: "A personal agreement between a taxpayer and the ATO" },
+            { id: "m11q5d", text: "A treaty that exempts all foreign income from tax" },
+          ],
+          correctOptionId: "m11q5b",
+        },
+      ],
+    },
+  },
+  {
+    id: "12",
+    title: "Module 12: Business",
+    description: "Business taxation principles and applications",
+    videoUrl: "/videos/module12.mp4",
+    pdfUrl: "/pdfs/module12.pdf",
+    type: "PDF Document",
+    completed: false,
+    quiz: {
+      questions: [
+        {
+          id: "m12q1",
+          text: "What is the difference between a business and a hobby for tax purposes?",
+          options: [
+            { id: "m12q1a", text: "There is no difference" },
+            {
+              id: "m12q1b",
+              text: "A business is conducted with the intention of making a profit and has a business-like structure",
+            },
+            { id: "m12q1c", text: "A business must be registered with ASIC" },
+            { id: "m12q1d", text: "A business must have employees" },
+          ],
+          correctOptionId: "m12q1b",
+        },
+        {
+          id: "m12q2",
+          text: "Which business structure is not a separate legal entity from its owner?",
+          options: [
+            { id: "m12q2a", text: "Company" },
+            { id: "m12q2b", text: "Sole trader" },
+            { id: "m12q2c", text: "Trust" },
+            { id: "m12q2d", text: "Partnership" },
+          ],
+          correctOptionId: "m12q2b",
+        },
+        {
+          id: "m12q3",
+          text: "What is the company tax rate for small business entities?",
+          options: [
+            { id: "m12q3a", text: "15%" },
+            { id: "m12q3b", text: "25%" },
+            { id: "m12q3c", text: "30%" },
+            { id: "m12q3d", text: "45%" },
+          ],
+          correctOptionId: "m12q3b",
+        },
+        {
+          id: "m12q4",
+          text: "Which of the following business expenses is generally NOT deductible?",
+          options: [
+            { id: "m12q4a", text: "Advertising expenses" },
+            { id: "m12q4b", text: "Salary and wages for employees" },
+            { id: "m12q4c", text: "Private or domestic expenses" },
+            { id: "m12q4d", text: "Rent for business premises" },
+          ],
+          correctOptionId: "m12q4c",
+        },
+        {
+          id: "m12q5",
+          text: "What is the GST registration threshold for businesses?",
+          options: [
+            { id: "m12q5a", text: "$50,000 annual turnover" },
+            { id: "m12q5b", text: "$75,000 annual turnover" },
+            { id: "m12q5c", text: "$100,000 annual turnover" },
+            { id: "m12q5d", text: "$150,000 annual turnover" },
+          ],
+          correctOptionId: "m12q5b",
+        },
+      ],
+    },
+  },
+  {
+    id: "13",
+    title: "Module 13: Final Test",
+    description: "Comprehensive assessment covering all previous modules",
+    videoUrl: "/videos/module13.mp4",
+    pdfUrl: "/pdfs/module13.pdf",
+    type: "Final Assessment",
+    completed: false,
+    quiz: {
+      questions: [
+        {
+          id: "m13q1",
+          text: "Which of the following is considered assessable income?",
+          options: [
+            { id: "m13q1a", text: "Gifts from family members" },
+            { id: "m13q1b", text: "Inheritance" },
+            { id: "m13q1c", text: "Salary and wages" },
+            { id: "m13q1d", text: "Life insurance proceeds" },
+          ],
+          correctOptionId: "m13q1c",
+        },
+        {
+          id: "m13q2",
+          text: "What is the difference between a tax deduction and a tax offset?",
+          options: [
+            { id: "m13q2a", text: "There is no difference" },
+            {
+              id: "m13q2b",
+              text: "A tax deduction reduces your assessable income, while a tax offset directly reduces your tax payable",
+            },
+            {
+              id: "m13q2c",
+              text: "A tax offset reduces your assessable income, while a tax deduction directly reduces your tax payable",
+            },
+            { id: "m13q2d", text: "Tax deductions are for individuals, while tax offsets are for businesses" },
+          ],
+          correctOptionId: "m13q2b",
+        },
+        {
+          id: "m13q3",
+          text: "How is the decline in value (depreciation) of a rental property's building calculated?",
+          options: [
+            { id: "m13q3a", text: "At 2.5% per year for 40 years for residential rental properties" },
+            { id: "m13q3b", text: "At 10% per year for 10 years" },
+            { id: "m13q3c", text: "At 5% per year for 20 years" },
+            { id: "m13q3d", text: "It varies based on the property's market value" },
+          ],
+          correctOptionId: "m13q3a",
+        },
+        {
+          id: "m13q4",
+          text: "Which method can be used to claim motor vehicle expenses?",
+          options: [
+            { id: "m13q4a", text: "Only the logbook method" },
+            { id: "m13q4b", text: "Only the cents per kilometer method" },
+            { id: "m13q4c", text: "Either the logbook method or the cents per kilometer method" },
+            { id: "m13q4d", text: "Neither, motor vehicle expenses are not deductible" },
+          ],
+          correctOptionId: "m13q4c",
+        },
+        {
+          id: "m13q5",
+          text: "What discount is available for capital gains on assets held for more than 12 months by individuals?",
+          options: [
+            { id: "m13q5a", text: "No discount" },
+            { id: "m13q5b", text: "25% discount" },
+            { id: "m13q5c", text: "50% discount" },
+            { id: "m13q5d", text: "100% discount (tax-free)" },
+          ],
+          correctOptionId: "m13q5c",
+        },
+        {
+          id: "m13q6",
+          text: "How are Australian tax residents taxed?",
+          options: [
+            { id: "m13q6a", text: "On worldwide income" },
+            { id: "m13q6b", text: "Only on Australian-sourced income" },
+            { id: "m13q6c", text: "On 50% of their worldwide income" },
+            { id: "m13q6d", text: "At a flat rate regardless of income" },
+          ],
+          correctOptionId: "m13q6a",
+        },
+        {
+          id: "m13q7",
+          text: "What is negative gearing?",
+          options: [
+            { id: "m13q7a", text: "When rental income exceeds rental expenses" },
+            { id: "m13q7b", text: "When rental expenses exceed rental income" },
+            { id: "m13q7c", text: "When the property decreases in value" },
+            { id: "m13q7d", text: "When you have multiple rental properties" },
+          ],
+          correctOptionId: "m13q7b",
+        },
+        {
+          id: "m13q8",
+          text: "Which business structure is not a separate legal entity from its owner?",
+          options: [
+            { id: "m13q8a", text: "Company" },
+            { id: "m13q8b", text: "Sole trader" },
+            { id: "m13q8c", text: "Trust" },
+            { id: "m13q8d", text: "Partnership" },
+          ],
+          correctOptionId: "m13q8b",
+        },
+        {
+          id: "m13q9",
+          text: "How is the taxable component of an Employment Termination Payment (ETP) generally taxed?",
+          options: [
+            { id: "m13q9a", text: "At your marginal tax rate" },
+            { id: "m13q9b", text: "It is tax-free" },
+            { id: "m13q9c", text: "At concessional rates up to certain caps" },
+            { id: "m13q9d", text: "At a flat rate of 45%" },
+          ],
+          correctOptionId: "m13q9c",
+        },
+        {
+          id: "m13q10",
+          text: "When are self-education expenses deductible?",
+          options: [
+            { id: "m13q10a", text: "When the education is related to your current employment" },
+            { id: "m13q10b", text: "When the education is for personal interest" },
+            { id: "m13q10c", text: "When the education is to help you get a new job in a different field" },
+            { id: "m13q10d", text: "Self-education expenses are never deductible" },
+          ],
+          correctOptionId: "m13q10a",
+        },
+      ],
+    },
+  },
+]
+
