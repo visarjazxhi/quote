@@ -30,7 +30,6 @@ Invoice Amount: $
 We understand that oversights happen but would appreciate prompt payment of this amount as our payment terms are 7 Days. 
 If you have any questions in relation to this invoice or need another copy, please let me know.
 Look forward to hearing back from you. 
-
       `,
       attachments: [
 
@@ -808,6 +807,44 @@ Best regards,
 
   `,
   attachments: [
+
+  ],
+  category: "Setup",
+},
+
+{
+  id: "Setup8",
+  subject: "SuperStream Rollover to SMSF – Process Overview",
+  body: `
+What is SuperStream?
+A mandatory electronic system for rollovers—no paper forms, no cheques, no manual handling.
+
+Rollover Steps (Industry Fund → SMSF)
+Update SMSF Details with ATO – Bank, ESA, and contact details must be current.
+Request Rollover – Submit via the industry fund’s portal/form with ATO-matching details.
+Fund Verifies SMSF – ATO checks compliance and detail accuracy. Mismatches = rejection.
+Electronic Transfer – Funds and data sent via SuperStream to SMSF’s bank & ESA.
+Confirm & Record – Verify deposit and record rollover data.
+Required Info
+✔ SMSF ABN (active), bank details, and ESA (e.g., BGL, Class, AUSPOST).
+✔ Member details (Name, DOB, TFN).
+✔ Completed rollover request form or portal submission.
+
+Avoid Delays
+❌ Outdated ATO records (ESA, bank, member details).
+❌ SMSF flagged as non-compliant.
+❌ No ESA = No rollover.
+
+Key Takeaways
+✔ Fully electronic process.
+✔ Accurate ATO records prevent delays.
+✔ No manual rollovers or cheques.
+✔ Keep records for compliance.
+Best regards,
+
+  `,
+  attachments: [
+    { name: "SMSF Rollover Request", url: "/email_templates/setup/SMSF Rollover Request.docx" },
 
   ],
   category: "Setup",
