@@ -110,8 +110,7 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-center text-gray-600">
-                  A description for this functionality. A description for this
-                  functionality.
+                  A course to learn how to prepare and lodge individual income tax returns.
                 </CardDescription>
               </CardContent>
             </Card>
