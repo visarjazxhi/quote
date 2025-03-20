@@ -8,6 +8,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { Toaster } from "react-hot-toast";
 import { usePathname } from "next/navigation";
+import { Analytics } from "@vercel/analytics/react"
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,6 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <Analytics />
       <body className={`${inter.className} min-h-screen bg-background text-foreground`}>
         <div className="flex flex-col min-h-screen">
           <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
