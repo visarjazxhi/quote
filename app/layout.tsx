@@ -81,7 +81,7 @@ function MainNav() {
         <Link href="/finance" className={linkStyle("/finance")}>
           Finance Tracker
         </Link>
-        <Link href="/course" className={linkStyle("/finance")}>
+        <Link href="/course" className={linkStyle("/course")}>
           Course
         </Link>
       </nav>
@@ -118,7 +118,7 @@ function MainNav() {
         <Link href="/finance" className={linkStyle("/finance")}>
           Finance Tracker
         </Link>
-        <Link href="/course" className={linkStyle("/finance")}>
+        <Link href="/course" className={linkStyle("/course")}>
           Course
         </Link>
       </nav>
