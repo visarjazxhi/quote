@@ -35,6 +35,8 @@ export type Integration = {
   color: string
   files?: FileAttachment[] // Array of file attachments
   links?: WebsiteLink[] // Array of website links
+  videoUrl?: string // Optional video URL
+  hasVideo?: boolean // Optional flag to show video frame
 }
 
 export const categories = [
@@ -110,6 +112,8 @@ export const integrations: Integration[] = [
   //     { name: "", url: "" },
   //     { name: "", url: "" },
   //   ],
+  // videoUrl: "",
+  // hasVideo: true,
   // },
 
   // Advisory Template Section
@@ -124,6 +128,8 @@ export const integrations: Integration[] = [
     files: [
       { name: "BAS  Invoicing Preparation.pdf", url: "knowledge/Advisory/BAS  Invoicing Preparation.pdf", type: "pdf" },
     ],
+    videoUrl:"https://www.youtube.com/watch?v=-uIXEh_vYKQ&list=PLl48NMG4PlArTrLwgh_ySRevGkyjmhNgH",
+    hasVideo: true,
   },
 
 
@@ -140,7 +146,7 @@ export const integrations: Integration[] = [
     files: [
       { name: "Admin Tasks.pdf", url: "knowledge/Admin Templates/Admin Tasks-2.pdf", type: "pdf" },
     ],
-
+    hasVideo: true,
   },
   {
     id: "admin-templates-2",
@@ -153,7 +159,7 @@ export const integrations: Integration[] = [
     files: [
       { name: "IAA-Agent Nomination Instructions", url: "knowledge/Admin Templates/Agent Nomination - Integritas.pdf", type: "pdf" },
     ],
-
+    hasVideo: true,
   },
   {
     id: "admin-templates-3",
@@ -166,7 +172,7 @@ export const integrations: Integration[] = [
     files: [
       { name: "TT-Agent Nomination Instructions", url: "knowledge/Admin Templates/Agent Nomination - Taxtalk.pdf", type: "pdf" },
     ],
-
+    hasVideo: true,
   },
   {
     id: "admin-templates-4",
@@ -179,6 +185,7 @@ export const integrations: Integration[] = [
     files: [
       { name: "ATO correspondence- How you will receive it.pdf", url: "knowledge/Admin Templates/ATO correspondence- How you will receive it.pdf", type: "pdf" },
     ],
+    hasVideo: true,
   },
   {
     id: "admin-templates-5",
@@ -191,7 +198,7 @@ export const integrations: Integration[] = [
     files: [
       { name: "Flexi Office Brochure.docx", url: "knowledge/Admin Templates/Flexi Office Brochure.docx", type: "docx" },
     ],
-
+    hasVideo: true,
   },
   // Bookkeeping Template Section
   // Calculators Template Section
