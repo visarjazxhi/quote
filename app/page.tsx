@@ -116,21 +116,21 @@ export default function Home() {
             </Card>
           </Link>
 
-          <Link href="#" className="flex items-center space-x-2">
+          <Link href="/decision" className="flex items-center space-x-2">
             <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader className="flex flex-col items-center">
                 <div className="rounded-full bg-green-100 p-3 mb-4">
                   <Pickaxe className="h-6 w-6 text-green-600" />
                 </div>
                 <CardTitle className="text-2xl font-semibold text-gray-800">
-                  Coming soon
+                  Business Structure Decision
                 </CardTitle>
-                <Badge variant="success">Not started yet</Badge>
+                <Badge variant="success">Work in Progress</Badge>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-center text-gray-600">
-                  A description for this functionality. A description for this
-                  functionality.
+                  A decision tree to help clients decide on the best business
+                  structure for their business.
                 </CardDescription>
               </CardContent>
             </Card>

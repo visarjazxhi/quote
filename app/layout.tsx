@@ -86,6 +86,9 @@ function MainNav() {
         <Link href="/course" className={linkStyle("/course")}>
           Course
         </Link>
+        <Link href="/decision" className={linkStyle("/decision")}>
+          Bussiness Structure
+        </Link>
       </nav>
 
       {/* Mobile Menu Button */}
@@ -122,6 +125,9 @@ function MainNav() {
         </Link>
         <Link href="/course" className={linkStyle("/course")}>
           Course
+        </Link>
+        <Link href="/decision" className={linkStyle("/decision")}>
+          Business Structure
         </Link>
       </nav>
     </div>
