@@ -123,13 +123,13 @@ export default function Home() {
                   <Pickaxe className="h-6 w-6 text-green-600" />
                 </div>
                 <CardTitle className="text-2xl font-semibold text-gray-800">
-                  Business Structure Decision
+                  Decision Trees
                 </CardTitle>
                 <Badge variant="success">Work in Progress</Badge>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-center text-gray-600">
-                  A decision tree to help clients decide on the best business
+                  A set of decision trees to help clients decide on the best business
                   structure for their business.
                 </CardDescription>
               </CardContent>
