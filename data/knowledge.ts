@@ -131,7 +131,18 @@ export const integrations: Integration[] = [
     videoUrl:"https://www.youtube.com/watch?v=-uIXEh_vYKQ&list=PLl48NMG4PlArTrLwgh_ySRevGkyjmhNgH",
     hasVideo: true,
   },
-
+  {
+    id: "Advisory-2",
+    name: "BAS  Invoicing Preparation",
+    description:
+      "This document provides a step-by-step guide on how to prepare your BAS invoices. It includes a checklist of tasks that need to be completed.",
+    category: "Advisory",
+    icon: Building ,
+    color: getRandomColor(),
+    files: [
+      { name: "", url: "knowledge/Advisory/BAS  Invoicing Preparation.pdf", type: "pdf" },
+    ],
+  },
 
   // Auditing Template Section
   // Admin Templates Section

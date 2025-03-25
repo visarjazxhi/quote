@@ -87,7 +87,7 @@ function MainNav() {
           Course
         </Link>
         <Link href="/decision" className={linkStyle("/decision")}>
-          Bussiness Structure
+          Decision Trees
         </Link>
       </nav>
 
