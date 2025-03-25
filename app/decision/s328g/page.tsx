@@ -10,11 +10,11 @@ import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import CriterionDetailsDialog from "@/components/s328g/criterion-details-dialog"
 import { criteriaData } from "@/data/s328g"
-import LegalDisclaimerDialog from "@/components/s328g/legal-disclaimer-dialog"
+import LegalDisclaimerDialog from "@/components/s328g/criterion-details-dialog"
 import WelcomeScreen from "@/components/s328g/welcome-screen"
 
 export default function SmallBusinessRestructureChecklist() {
-  const [answers, setAnswers] = useState<Record<number, boolean>>({})
+  const [answers, setAnswers] = useState<Record<number, boolean | undefined>>({})
   const [currentCriterion, setCurrentCriterion] = useState(1)
   const [showSummary, setShowSummary] = useState(false)
   const [showDisqualification, setShowDisqualification] = useState(false)
@@ -71,7 +71,7 @@ export default function SmallBusinessRestructureChecklist() {
           for transfers of active assets as part of a genuine restructure of an ongoing business.
         </p>
         <div className="flex justify-center mt-4">
-          <LegalDisclaimerDialog />
+          <LegalDisclaimerDialog criterion={criteriaData[currentCriterion - 1]} />
         </div>
       </div>
 
@@ -95,7 +95,7 @@ export default function SmallBusinessRestructureChecklist() {
           </motion.div>
         ) : !showSummary ? (
           <motion.div
-            key="criterion"
+            key={`criterion-${currentCriterion}`}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
@@ -174,9 +174,15 @@ function CriterionCard({ criterion, answer, onAnswer, currentStep, totalSteps }:
           <CriterionDetailsDialog criterion={criterion} />
         </div>
 
+        <p className="text-sm text-muted-foreground mb-2">Please select one option:</p>
+
         <RadioGroup
-          value={answer === undefined ? undefined : answer ? "yes" : "no"}
-          onValueChange={(value) => onAnswer(value === "yes")}
+          value={answer === undefined ? "" : answer ? "yes" : "no"}
+          onValueChange={(value) => {
+            if (value === "yes" || value === "no") {
+              onAnswer(value === "yes")
+            }
+          }}
           className="space-y-3"
         >
           <div
@@ -188,7 +194,7 @@ function CriterionCard({ criterion, answer, onAnswer, currentStep, totalSteps }:
           >
             <RadioGroupItem value="yes" id={`${criterion.id}-yes`} />
             <Label htmlFor={`${criterion.id}-yes`} className="flex-1 cursor-pointer">
-              Yes, this criterion is satisfied
+              Yes, this criteria is satisfied
             </Label>
             {answer === true && <CheckCircle className="h-5 w-5 text-green-500" />}
           </div>
@@ -202,7 +208,7 @@ function CriterionCard({ criterion, answer, onAnswer, currentStep, totalSteps }:
           >
             <RadioGroupItem value="no" id={`${criterion.id}-no`} />
             <Label htmlFor={`${criterion.id}-no`} className="flex-1 cursor-pointer">
-              No, this criterion is not satisfied
+              No, this criteria is not satisfied
             </Label>
             {answer === false && <AlertCircle className="h-5 w-5 text-red-500" />}
           </div>
@@ -225,7 +231,7 @@ function CriterionCard({ criterion, answer, onAnswer, currentStep, totalSteps }:
 }
 
 type SummaryCardProps = {
-  answers: Record<number, boolean>
+  answers: Record<number, boolean | undefined>
   onReset: () => void
 }
 
