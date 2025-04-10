@@ -133,14 +133,14 @@ export const integrations: Integration[] = [
   },
   {
     id: "Advisory-2",
-    name: "BAS  Invoicing Preparation",
+    name: "Review of General Interest Charge",
     description:
-      "This document provides a step-by-step guide on how to prepare your BAS invoices. It includes a checklist of tasks that need to be completed.",
+      "This document provides a review of the General Interest Charge (GIC) and how it is calculated. It includes a list of common scenarios where GIC may apply.",
     category: "Advisory",
     icon: Building ,
     color: getRandomColor(),
     files: [
-      { name: "", url: "knowledge/Advisory/BAS  Invoicing Preparation.pdf", type: "pdf" },
+      { name: "Review of GIC", url: "knowledge/Advisory/Review of GIC.docx", type: "docx" },
     ],
   },
 

@@ -850,6 +850,74 @@ Best regards,
   category: "Setup",
 },
 
+{
+  id: "Setup9",
+  subject: "Setting up your company and family trust",
+  body: `
+Hi [Client Name],
+
+Can you please provide us the following details.
+
+Company (Pty Ltd) Setup
+
+1. Proposed Company Name:
+Preferred:
+Alternative (if unavailable):
+
+2. Registered Office Address:
+(Must be a physical Australian address):
+
+3. Principal Place of Business (if different):
+
+4. Director(s) and Secretary:
+For each person:
+•	Full Name:
+•	Residential Address:
+•	Date of Birth:
+•	Place of Birth (City & Country):
+•	Role: (e.g. Director / Secretary / Both)
+
+5. Shareholder(s):
+For each:
+•	Full Name / Company Name:
+•	Address:
+•	Number of Shares:
+•	Share Class (e.g. Ordinary):
+•	Amount Paid per Share:
+•	Acting as trustee for a trust? (Yes/No) If yes, Trust Name:
+
+6. Total Number of Shares to be Issued:
+(e.g. 100 @ $1 each)
+Discretionary (Family) Trust Setup
+1. Proposed Name of Trust:
+2. Trustee:
+(Individual or Company):
+If company, please provide name and ACN:
+
+3. Settlor:
+(Independent third party, cannot be a beneficiary)
+•	Full Name:
+•	Residential Address:
+
+4. Appointor(s):
+(Has power to replace trustee)
+•	Full Name(s):
+•	Residential Address(es):
+5. Primary Beneficiaries:
+(e.g., you and your spouse or family group):
+
+6. Default Beneficiaries (optional):
+
+Best regards,
+
+  `,
+  attachments: [
+    { name: "SMSF Rollover Request", url: "/email_templates/setup/SMSF Rollover Request.docx" },
+
+  ],
+  category: "Setup",
+},
+
 // {/* Tax Returns */} -   // {/* Tax Returns */} -   // {/* Tax Returns */}
 {
   id: "TaxReturns1",
