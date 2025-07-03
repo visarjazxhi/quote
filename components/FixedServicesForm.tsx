@@ -120,7 +120,7 @@ export default function FixedServicesForm() {
               suppressHydrationWarning
             >
               <p suppressHydrationWarning>
-                No fixed services added yet. Click "Add Service" to get started.
+                No fixed services added yet. Click &quot;Add Service&quot; to get started.
               </p>
             </div>
           ) : (

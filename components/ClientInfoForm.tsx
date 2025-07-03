@@ -334,7 +334,7 @@ export default function ClientInfoForm() {
                           <Input
                             id={`accounting-software-${entity.id}`}
                             placeholder="Enter current software"
-                            value={entity.accountingSoftware || ""}
+                            value={entity.accountingSoftware ?? ""}
                             onChange={(e) =>
                               handleEntityUpdate(
                                 entity.id,
