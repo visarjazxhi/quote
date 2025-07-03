@@ -249,17 +249,21 @@ export default function ClientInfoForm() {
 
                   {/* Xero subscription in separate row */}
                   <div className="space-y-3" suppressHydrationWarning>
-                    <div
-                      className="flex items-center space-x-4"
-                      suppressHydrationWarning
-                    >
+                    {/* Question on first line */}
+                    <div suppressHydrationWarning>
                       <span
                         className="text-sm font-medium"
                         suppressHydrationWarning
                       >
                         Does the client have a Xero subscription?
                       </span>
+                    </div>
 
+                    {/* Options on second line */}
+                    <div
+                      className="flex flex-col sm:flex-row sm:items-center gap-4"
+                      suppressHydrationWarning
+                    >
                       <div
                         className="flex items-center space-x-4"
                         suppressHydrationWarning
@@ -321,7 +325,7 @@ export default function ClientInfoForm() {
 
                       {entity.hasXeroFile === false && (
                         <div
-                          className="flex items-center space-x-2 flex-1"
+                          className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2 flex-1"
                           suppressHydrationWarning
                         >
                           <Label
