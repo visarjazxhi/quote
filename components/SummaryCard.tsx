@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { ServiceSection, useEstimationStore } from "@/lib/store";
+
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Card,
   CardContent,
@@ -8,14 +8,13 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { motion, AnimatePresence } from "framer-motion";
-import { jsPDF } from "jspdf";
+import { ServiceSection, useEstimationStore } from "@/lib/store";
+import { useEffect, useState } from "react";
 
-interface SummaryCardProps {
-  total: number;
-}
+import { Button } from "./ui/button";
+import ClientWrapper from "./ClientWrapper";
+import { Input } from "./ui/input";
+import { jsPDF } from "jspdf";
 
 const getValidSections = (sections: ServiceSection[]) => {
   return sections.filter((section) => {
@@ -31,14 +30,24 @@ const getValidSections = (sections: ServiceSection[]) => {
   });
 };
 
-export default function SummaryCard({ total }: SummaryCardProps) {
-  const { sections } = useEstimationStore();
+export default function SummaryCard() {
+  const { sections, clientInfo, fixedServices, discount, totalCost } =
+    useEstimationStore();
   const [emails, setEmails] = useState<string>("");
-  const [isCollapsed, setIsCollapsed] = useState(false); // Start collapsed
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Get total with fallback to prevent undefined errors
+  const total = mounted ? totalCost() : 0;
 
   const handleToggleCollapse = () => {
-    setIsCollapsed((prev) => !prev); // Toggle collapse state
+    setIsCollapsed((prev) => !prev);
   };
+
   const generatePDFContent = () => {
     const doc = new jsPDF();
 
@@ -76,64 +85,160 @@ export default function SummaryCard({ total }: SummaryCardProps) {
     doc.setFontSize(12);
     let yPosition = headerHeight + 25; // Start content below the header
 
+    // Add client information if available
+    if (clientInfo.clientGroup || clientInfo.entities.some((e) => e.name)) {
+      doc.setFontSize(14);
+      doc.setTextColor(0);
+      doc.text("Client Information", 20, yPosition);
+      yPosition += 10;
+
+      if (clientInfo.clientGroup) {
+        doc.setFontSize(12);
+        doc.setTextColor(100);
+        doc.text(`Client Group: ${clientInfo.clientGroup}`, 30, yPosition);
+        yPosition += 8;
+      }
+
+      clientInfo.entities.forEach((entity, index) => {
+        if (entity.name) {
+          doc.setFontSize(12);
+          doc.setTextColor(0);
+          doc.text(`Entity ${index + 1}:`, 30, yPosition);
+          yPosition += 6;
+
+          // Entity details in one line
+          doc.setTextColor(100);
+          const entityDetails = [
+            entity.name,
+            entity.entityType,
+            entity.businessType,
+          ]
+            .filter(Boolean)
+            .join(" | ");
+
+          doc.text(entityDetails, 40, yPosition);
+          yPosition += 6;
+
+          // Xero subscription in separate line
+          const xeroStatus = entity.hasXeroFile
+            ? "Xero subscription: Yes"
+            : `Xero subscription: No${
+                entity.accountingSoftware
+                  ? ` | Current software: ${entity.accountingSoftware}`
+                  : ""
+              }`;
+
+          doc.text(xeroStatus, 40, yPosition);
+          yPosition += 8;
+        }
+      });
+
+      yPosition += 5; // Add space before services
+    }
+
+    // Add fixed services first if any
+    if (fixedServices.length > 0) {
+      doc.setFontSize(14);
+      doc.setTextColor(0);
+      doc.text("Fixed Services", 20, yPosition);
+      yPosition += 10;
+
+      fixedServices.forEach((service) => {
+        if (service.description && service.amount > 0) {
+          doc.setFontSize(12);
+          doc.setTextColor(1);
+          doc.text(service.description, 30, yPosition);
+          doc.setTextColor(100);
+          doc.text(`$${service.amount.toFixed(2)}`, 130, yPosition);
+          yPosition += 6;
+        }
+      });
+      yPosition += 5;
+    }
+
     // Filter sections with valid services
     const validSections = getValidSections(sections);
 
     // Add sections and services
     validSections.forEach((section) => {
-        doc.setFontSize(14);
-        doc.setTextColor(0); // Black color for section titles
-        doc.text(section.name, 20, yPosition);
-        yPosition += 10;
+      doc.setFontSize(14);
+      doc.setTextColor(0); // Black color for section titles
+      doc.text(section.name, 20, yPosition);
+      yPosition += 10;
 
-        doc.setFontSize(12);
-        section.services.forEach((service) => {
-            if (service.type === "withOptions" && service.selectedOption && service.quantity) {
-                const selectedOption = service.options.find((opt) => opt.value === service.selectedOption);
-                if (!selectedOption) return;
+      doc.setFontSize(12);
+      section.services.forEach((service) => {
+        if (
+          service.type === "withOptions" &&
+          service.selectedOption &&
+          service.quantity
+        ) {
+          const selectedOption = service.options.find(
+            (opt) => opt.value === service.selectedOption
+          );
+          if (!selectedOption) return;
 
-                // Calculate the total amount
-                const totalAmount = selectedOption.rate * service.quantity;
+          // Calculate the total amount
+          const totalAmount = selectedOption.rate * service.quantity;
 
-                // Service name and option
-                doc.setTextColor(1); // Black color for service name
-                doc.text(`${service.name} (${selectedOption.label})`, 30, yPosition);
+          // Service name and option
+          doc.setTextColor(1); // Black color for service name
+          doc.text(`${service.name} (${selectedOption.label})`, 30, yPosition);
 
-                // Rate and quantity in one line: "Quantity x Rate = Total"
-                doc.setTextColor(100); // Gray color for details
-                doc.text(
-                    `${service.quantity} x $${selectedOption.rate}/unit = $${totalAmount.toFixed(2)}`,
-                    130,
-                    yPosition
-                );
+          // Rate and quantity in one line: "Quantity x Rate = Total"
+          doc.setTextColor(100); // Gray color for details
+          doc.text(
+            `${service.quantity} x $${
+              selectedOption.rate
+            }/unit = $${totalAmount.toFixed(2)}`,
+            130,
+            yPosition
+          );
 
-                // Move to the next line
-                yPosition += 5;
-            } else if (service.type === "fixedCost" && service.value !== undefined) {
-                // Handle fixed costs
-                doc.setTextColor(1); // Black color for service name
-                doc.text(`${service.name}`, 30, yPosition);
-                doc.setTextColor(100); // Gray color for details
-                doc.text(`Fixed Cost: $${service.value.toFixed(2)}`, 130, yPosition);
-                yPosition += 5;
-            }
-            yPosition += 1; // Add some space between services
-        });
-        yPosition += 5; // Add some space between sections
+          // Move to the next line
+          yPosition += 5;
+        } else if (
+          service.type === "fixedCost" &&
+          service.value !== undefined
+        ) {
+          // Handle fixed costs
+          doc.setTextColor(1); // Black color for service name
+          doc.text(`${service.name}`, 30, yPosition);
+          doc.setTextColor(100); // Gray color for details
+          doc.text(`Fixed Cost: $${service.value.toFixed(2)}`, 130, yPosition);
+          yPosition += 5;
+        }
+        yPosition += 1; // Add some space between services
+      });
+      yPosition += 5; // Add some space between sections
     });
+
+    // Add discount if applicable
+    if (discount.amount > 0) {
+      doc.setFontSize(14);
+      doc.setTextColor(0);
+      doc.text("Discount", 20, yPosition);
+      yPosition += 10;
+
+      doc.setFontSize(12);
+      doc.setTextColor(1);
+      doc.text(discount.description || "Discount Applied", 30, yPosition);
+      doc.setTextColor(100);
+      doc.text(`-$${discount.amount.toFixed(2)}`, 130, yPosition);
+      yPosition += 8;
+    }
 
     // Add a horizontal line above the total
     doc.setDrawColor(200); // Light gray color for the line
     doc.line(20, yPosition, 190, yPosition);
 
-    // Add the total estimate
+    // Add the total estimate with safe number handling
     doc.setFontSize(16);
     doc.setTextColor(0); // Black color for the total
-    doc.text(`Total Estimate: $${total.toFixed(2)}`, 20, yPosition + 5);
+    doc.text(`Total Estimate: $${(total || 0).toFixed(2)}`, 20, yPosition + 5);
 
     return doc;
-};
-
+  };
 
   const handleDownloadPDF = () => {
     const doc = generatePDFContent();
@@ -185,13 +290,28 @@ export default function SummaryCard({ total }: SummaryCardProps) {
   };
 
   return (
-    <>
+    <ClientWrapper
+      fallback={
+        <div className="fixed top-4 right-4 z-50" suppressHydrationWarning>
+          <Button
+            className="rounded-full p-2 bg-primary animate-pulse"
+            suppressHydrationWarning
+          >
+            <div
+              className="h-5 w-5 bg-muted rounded"
+              suppressHydrationWarning
+            />
+          </Button>
+        </div>
+      }
+    >
       {/* Floating Toggle Button */}
       <Button
         onClick={handleToggleCollapse}
         className={`fixed top-4 right-4 z-50 rounded-full p-2 ${
           isCollapsed ? "bg-primary" : "bg-primary"
         }`}
+        suppressHydrationWarning
       >
         {isCollapsed ? (
           <ChevronLeftIcon className="h-5 w-5 text-red-400" />
@@ -210,64 +330,162 @@ export default function SummaryCard({ total }: SummaryCardProps) {
             exit={{ x: 300 }} // Slide out of view
             transition={{ duration: 0.3 }}
             className="fixed top-0 right-0 h-screen w-[300px] bg-background shadow-lg z-40 overflow-y-auto"
+            suppressHydrationWarning
           >
-            <Card className="h-full">
-              <CardHeader>
-                <CardTitle>Estimate Summary</CardTitle>
+            <Card className="h-full" suppressHydrationWarning>
+              <CardHeader suppressHydrationWarning>
+                <CardTitle suppressHydrationWarning>Estimate Summary</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2 overflow-y-auto">
-  <ul className="space-y-2">
-    {getValidSections(sections).map((section) => (
-      <li key={section.id}>
-        <h3 className="font-semibold">{section.name}</h3>
-        <ul className="pl-4">
-          {section.services.map((service) => {
-            if (service.type === "withOptions" && service.selectedOption && service.quantity) {
-              const selectedOption = service.options.find(
-                (opt) => opt.value === service.selectedOption
-              );
-              if (!selectedOption) return null;
-              return (
-                <li key={service.id} className="flex flex-col">
-                  <div className="flex justify-between">
-                    <span>
-                      {service.name} ({selectedOption.label})
-                    </span>
-                    <span>${(selectedOption.rate * service.quantity).toFixed(2)}</span>
+              <CardContent
+                className="space-y-2 overflow-y-auto"
+                suppressHydrationWarning
+              >
+                {/* Client Information */}
+                {(clientInfo.clientGroup ||
+                  clientInfo.entities.some((e) => e.name)) && (
+                  <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                    <h3 className="font-semibold text-sm mb-2">
+                      Client Information
+                    </h3>
+                    {clientInfo.clientGroup && (
+                      <p className="text-xs mb-1">
+                        <strong>Group:</strong> {clientInfo.clientGroup}
+                      </p>
+                    )}
+                    {clientInfo.entities.map(
+                      (entity, index) =>
+                        entity.name && (
+                          <div key={entity.id} className="text-xs mb-3">
+                            <p className="mb-1">
+                              <strong>Entity {index + 1}:</strong>
+                            </p>
+                            <p className="ml-2 mb-1">
+                              {[
+                                entity.name,
+                                entity.entityType,
+                                entity.businessType,
+                              ]
+                                .filter(Boolean)
+                                .join(" | ")}
+                            </p>
+                            <p className="ml-2">
+                              Xero subscription:{" "}
+                              {entity.hasXeroFile ? "Yes" : "No"}
+                              {!entity.hasXeroFile &&
+                                entity.accountingSoftware &&
+                                ` | Current software: ${entity.accountingSoftware}`}
+                            </p>
+                          </div>
+                        )
+                    )}
                   </div>
-                  <div className="text-sm text-gray-500 pl-4">
-                    Rate: ${selectedOption.rate}/unit, Quantity: {service.quantity}
+                )}
+
+                <ul className="space-y-2">
+                  {getValidSections(sections).map((section) => (
+                    <li key={section.id}>
+                      <h3 className="font-semibold">{section.name}</h3>
+                      <ul className="pl-4">
+                        {section.services.map((service) => {
+                          if (
+                            service.type === "withOptions" &&
+                            service.selectedOption &&
+                            service.quantity
+                          ) {
+                            const selectedOption = service.options.find(
+                              (opt) => opt.value === service.selectedOption
+                            );
+                            if (!selectedOption) return null;
+                            return (
+                              <li key={service.id} className="flex flex-col">
+                                <div className="flex justify-between">
+                                  <span>
+                                    {service.name} ({selectedOption.label})
+                                  </span>
+                                  <span>
+                                    $
+                                    {(
+                                      selectedOption.rate * service.quantity
+                                    ).toFixed(2)}
+                                  </span>
+                                </div>
+                                <div className="text-sm text-gray-500 pl-4">
+                                  Rate: ${selectedOption.rate}/unit, Quantity:{" "}
+                                  {service.quantity}
+                                </div>
+                              </li>
+                            );
+                          } else if (
+                            service.type === "fixedCost" &&
+                            service.value !== undefined
+                          ) {
+                            return (
+                              <li key={service.id} className="flex flex-col">
+                                <div className="flex justify-between">
+                                  <span>{service.name}</span>
+                                  <span>${service.value.toFixed(2)}</span>
+                                </div>
+                              </li>
+                            );
+                          }
+                          return null;
+                        })}
+                      </ul>
+                    </li>
+                  ))}
+                </ul>
+
+                {/* Fixed Services */}
+                {fixedServices.length > 0 && (
+                  <div className="mt-4">
+                    <h3 className="font-semibold mb-2">Fixed Services</h3>
+                    <ul className="space-y-1">
+                      {fixedServices.map(
+                        (service) =>
+                          service.description &&
+                          service.amount > 0 && (
+                            <li
+                              key={service.id}
+                              className="flex justify-between text-sm"
+                            >
+                              <span className="truncate pr-2">
+                                {service.description}
+                              </span>
+                              <span>${service.amount.toFixed(2)}</span>
+                            </li>
+                          )
+                      )}
+                    </ul>
                   </div>
-                </li>
-              );
-            } else if (service.type === "fixedCost" && service.value !== undefined) {
-              return (
-                <li key={service.id} className="flex flex-col">
-                  <div className="flex justify-between">
-                    <span>{service.name}</span>
-                    <span>${service.value.toFixed(2)}</span>
+                )}
+
+                {/* Discount */}
+                {discount.amount > 0 && (
+                  <div className="mt-4">
+                    <h3 className="font-semibold mb-2">Discount</h3>
+                    <div className="flex justify-between text-sm text-orange-600">
+                      <span className="truncate pr-2">
+                        {discount.description || "Discount Applied"}
+                      </span>
+                      <span>-${discount.amount.toFixed(2)}</span>
+                    </div>
                   </div>
-                </li>
-              );
-            }
-            return null;
-          })}
-        </ul>
-      </li>
-    ))}
-  </ul>
-</CardContent>
+                )}
+              </CardContent>
               <CardFooter className="flex-col space-y-2">
                 <div className="flex justify-between w-full text-lg font-semibold">
                   <span>Total Estimate</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>${(total || 0).toFixed(2)}</span>
                 </div>
-                <Input
-                  type="text"
-                  placeholder="Enter multiple emails (comma separated)"
-                  value={emails}
-                  onChange={(e) => setEmails(e.target.value)}
-                />
+                {mounted && (
+                  <Input
+                    type="text"
+                    placeholder="Enter multiple emails (comma separated)"
+                    value={emails}
+                    onChange={(e) => setEmails(e.target.value)}
+                    suppressHydrationWarning
+                  />
+                )}
                 <Button onClick={handleDownloadPDF} className="w-full">
                   Download PDF
                 </Button>
@@ -283,7 +501,7 @@ export default function SummaryCard({ total }: SummaryCardProps) {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </ClientWrapper>
   );
 }
 

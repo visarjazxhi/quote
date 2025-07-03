@@ -1,3 +1,4 @@
+import { BookOpenText, LibraryBig, LucideHandCoins, Mail, Pickaxe, Signature } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -5,8 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+
 import { Badge } from "@/components/ui/badge";
-import { Signature, Pickaxe, Mail, LibraryBig, LucideHandCoins, BookOpenText } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
@@ -125,7 +126,7 @@ export default function Home() {
                 <CardTitle className="text-2xl font-semibold text-gray-800">
                   Decision Trees
                 </CardTitle>
-                <Badge variant="success">Work in Progress</Badge>
+                {/* <Badge variant="success">Work in Progress</Badge> */}
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-center text-gray-600">
