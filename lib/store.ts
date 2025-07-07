@@ -1,9 +1,36 @@
 import { create } from "zustand";
 
+// Centralized rate definitions
+export const STANDARD_RATES = {
+  admin: { value: "admin", label: "Admin", rate: 75 },
+  junior: { value: "junior", label: "Junior Accountant", rate: 100 },
+  standard: { value: "standard", label: "Standard", rate: 150 },
+  intermediate: {
+    value: "intermediate",
+    label: "Intermediate Accountant",
+    rate: 200,
+  },
+  accountant: { value: "accountant", label: "Accountant", rate: 300 },
+  senior: { value: "senior", label: "Senior Manager", rate: 400 },
+  partner: { value: "partner", label: "Partner", rate: 600 },
+} as const;
+
+// Helper function to get standard rate options
+export const getStandardRateOptions = (): ServiceOption[] => {
+  return Object.values(STANDARD_RATES);
+};
+
+// Helper function to get specific rate options
+export const getCustomRateOptions = (
+  rateKeys: (keyof typeof STANDARD_RATES)[]
+): ServiceOption[] => {
+  return rateKeys.map((key) => STANDARD_RATES[key]);
+};
+
 export interface ServiceOption {
   value: string;
   label: string;
-  rate: number; // Rate for this option
+  rate: number;
 }
 
 export interface ServiceWithOptions {
@@ -11,26 +38,27 @@ export interface ServiceWithOptions {
   name: string;
   description: string;
   type: "withOptions";
-  options: ServiceOption[];
+  rateOptions?: ServiceOption[]; // Optional custom rates, defaults to standard rates
   selectedOption?: string;
-  quantity?: number; // Quantity for the selected option
-}
-
-// export type Service = ServiceWithOptions; // Only one type of service now
-export type Service = ServiceWithOptions | ServiceWithFixedCost; // Add the new type
-
-export interface ServiceSection {
-  id: string;
-  name: string;
-  services: Service[];
+  quantity?: number;
+  customRate?: number;
+  useCustomRate?: boolean;
 }
 
 export interface ServiceWithFixedCost {
   id: string;
   name: string;
   description: string;
-  type: "fixedCost"; // New type for fixed costs
-  value?: number; // The fixed cost value input by the user
+  type: "fixedCost";
+  value?: number;
+}
+
+export type Service = ServiceWithOptions | ServiceWithFixedCost;
+
+export interface ServiceSection {
+  id: string;
+  name: string;
+  services: Service[];
 }
 
 export interface Entity {
@@ -44,13 +72,9 @@ export interface Entity {
 
 export interface ClientInfo {
   clientGroup: string;
+  address: string;
+  contactPerson: string;
   entities: Entity[];
-}
-
-export interface FixedService {
-  id: string;
-  description: string;
-  amount: number;
 }
 
 export interface Discount {
@@ -61,7 +85,6 @@ export interface Discount {
 interface EstimationStore {
   sections: ServiceSection[];
   clientInfo: ClientInfo;
-  fixedServices: FixedService[];
   discount: Discount;
   toggleService: (sectionId: string, serviceId: string) => void;
   updateOption: (sectionId: string, serviceId: string, option: string) => void;
@@ -70,12 +93,20 @@ interface EstimationStore {
     serviceId: string,
     quantity: number
   ) => void;
+  updateCustomRate: (
+    sectionId: string,
+    serviceId: string,
+    rate: number
+  ) => void;
+  toggleCustomRate: (sectionId: string, serviceId: string) => void;
   updateFixedCost: (
     sectionId: string,
     serviceId: string,
     value: number
-  ) => void; // New function
+  ) => void;
   updateClientGroup: (clientGroup: string) => void;
+  updateClientAddress: (address: string) => void;
+  updateContactPerson: (contactPerson: string) => void;
   addEntity: () => void;
   removeEntity: (entityId: string) => void;
   updateEntity: (
@@ -83,21 +114,18 @@ interface EstimationStore {
     field: keyof Entity,
     value: string | boolean
   ) => void;
-  addFixedService: () => void;
-  removeFixedService: (serviceId: string) => void;
-  updateFixedService: (
-    serviceId: string,
-    field: keyof FixedService,
-    value: string | number
-  ) => void;
+
   updateDiscount: (field: keyof Discount, value: string | number) => void;
   totalCost: () => number;
   addSection: (name: string) => void;
+  getServiceOptions: (sectionId: string, serviceId: string) => ServiceOption[];
 }
 
 export const useEstimationStore = create<EstimationStore>((set, get) => ({
   clientInfo: {
     clientGroup: "",
+    address: "",
+    contactPerson: "",
     entities: [
       {
         id: "1",
@@ -109,13 +137,6 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
       },
     ],
   },
-  fixedServices: [
-    {
-      id: "default-1",
-      description: "Additional consultation",
-      amount: 0,
-    },
-  ],
   discount: {
     description: "",
     amount: 0,
@@ -130,160 +151,49 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           name: "Client ID",
           description: "Managing and assigning client identifiers.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
+          // Uses standard rates by default
         },
         {
           id: "xero-setup",
           name: "Set up on XPM",
           description: "Setting up client accounts on Xero Practice Manager.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "ato-nomination",
           name: "ATO Nomination",
           description: "Nomination on ATO as the client's tax agent.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "asic-onboarding",
           name: "ASIC Onboarding",
           description: "Onboarding clients with the ASIC",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "engagement",
           name: "Engagement",
           description: "Client engagement and interaction services.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "job-flow-management",
           name: "Job Flow Management",
           description: "Managing workflow and job assignments.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "data-collection-review",
           name: "Data Collection & Review",
           description: "Gathering and reviewing client data.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "cleardocs",
           name: "New client - Cleardocs",
           description: "Setting up new clients from Cleardocs.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
       ],
     },
@@ -296,40 +206,29 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           name: "ABN Application",
           description: "Applying for an Australian Business Number (ABN).",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
+          // Example of custom rates - excluding accountant level for basic applications
+          rateOptions: getCustomRateOptions([
+            "admin",
+            "junior",
+            "standard",
+            "intermediate",
+            "senior",
+            "partner",
+          ]),
         },
         {
           id: "tfn-application",
           name: "TFN Application",
           description: "Applying for a Tax File Number (TFN).",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
+          rateOptions: getCustomRateOptions([
+            "admin",
+            "junior",
+            "standard",
+            "intermediate",
+            "senior",
+            "partner",
+          ]),
         },
         {
           id: "gst-application",
@@ -337,40 +236,28 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Applying for Goods and Services Tax (GST) registration.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
+          rateOptions: getCustomRateOptions([
+            "admin",
+            "junior",
+            "standard",
+            "intermediate",
+            "senior",
+            "partner",
+          ]),
         },
         {
           id: "stamp-duty-application",
           name: "Stamp Duty Application",
           description: "Applying for stamp duty on State Revenue Office (SRO).",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
+          rateOptions: getCustomRateOptions([
+            "admin",
+            "junior",
+            "standard",
+            "intermediate",
+            "senior",
+            "partner",
+          ]),
         },
       ],
     },
@@ -383,40 +270,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           name: "Annual Accounts Preparation",
           description: "Preparation of annual financial accounts.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "tax-return-preparation",
           name: "Tax Return Preparation",
           description: "Preparation and lodgment of tax returns.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "taxable-payments-report",
@@ -424,60 +283,18 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Preparation and submission of taxable payments reports.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "workcover-application",
           name: "Workcover Application Only",
           description: "Assistance with Workcover application.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "payroll-tax-lodgement",
           name: "Payroll Tax Lodgement & Reconciliation",
           description: "Processing and lodging payroll tax reconciliation.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "admin-emails-reports",
@@ -485,20 +302,6 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Administrative support including email management and regulatory reporting.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "ato-liaison",
@@ -506,60 +309,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Communication and liaison with the Australian Taxation Office.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "correspondence",
           name: "Correspondence",
           description: "Handling business correspondence and communication.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
-        },
-        {
-          id: "annual-accounts-review",
-          name: "Annual Accounts Review",
-          description: "Review of financial accounts and reports.",
-          type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "client-meeting",
@@ -567,60 +322,18 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Business consultation and strategy meeting with clients.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "other",
           name: "Other",
           description: "Any other additional services required.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "client-outboarding",
           name: "Client Out Boarding",
           description: "Handling client transitions and offboarding processes.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
       ],
     },
@@ -633,20 +346,6 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           name: "Annual Review",
           description: "Review of annual reports and compliance documents.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "other-asic-administration",
@@ -654,60 +353,18 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Handling other administrative tasks related to ASIC compliance.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "client-meeting",
           name: "Client Meeting",
           description: "Consultation and advisory meetings with clients.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "client-outboarding",
           name: "Client Out Boarding",
           description: "Managing the transition and offboarding of clients.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
       ],
     },
@@ -721,20 +378,6 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Preparation and lodgment of monthly Business Activity Statements including GST reconciliation.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "quarterly-bas-gst-reconciliation",
@@ -742,20 +385,6 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Preparation and lodgment of quarterly Business Activity Statements including GST reconciliation.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "ias-preparation",
@@ -763,20 +392,6 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Preparation and lodgment of Instalment Activity Statements.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "other-as-administration",
@@ -784,40 +399,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Handling other administrative tasks related to Activity Statements.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "client-outboarding",
           name: "Client Out Boarding",
           description: "Managing the transition and offboarding of clients.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
       ],
     },
@@ -831,20 +418,6 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Managing accounts receivable, accounts payable, journal entries, and financial reports.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "bookkeeping-bank-reconciliation",
@@ -852,40 +425,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Reconciling bank transactions to ensure accuracy in financial records.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "bookkeeping-attendance-general",
           name: "Bookkeeping Attendance - General",
           description: "General bookkeeping attendance and support.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "data-entry-bank-coding-reconciliation",
@@ -893,20 +438,6 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Processing data entry, bank transaction coding, and reconciliation.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "payroll-process-aba-file",
@@ -914,20 +445,6 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Processing payroll and preparing ABA files for direct payments.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "stp-filing",
@@ -935,20 +452,6 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Processing and lodging Single Touch Payroll (STP) reports.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "super-process-lodgement",
@@ -956,20 +459,6 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Processing and lodging superannuation payments for employees.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "xero-bookkeeping-support",
@@ -977,20 +466,6 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Providing support and assistance for Xero bookkeeping tasks.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "xero-setup",
@@ -998,40 +473,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Setting up Xero accounts and configurations for business needs.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "xero-training",
           name: "Xero Training",
           description: "Providing training sessions on using Xero effectively.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "accounts-payable-batch-preparation",
@@ -1039,20 +486,6 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Processing accounts payable and preparing batch payments.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "accounts-receivable-debt-reconciliation",
@@ -1060,24 +493,22 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Managing accounts receivable and reconciling outstanding debts.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
       ],
     },
-
+    {
+      id: "advisory",
+      name: "Advisory",
+      services: [
+        {
+          id: "annual-accounts-review",
+          name: "Annual Accounts Review",
+          description: "Review of financial accounts and reports.",
+          type: "withOptions",
+          // Uses standard rates (including accountant level)
+        },
+      ],
+    },
     {
       id: "financial-planning",
       name: "Financial Planning",
@@ -1088,20 +519,6 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Comprehensive strategies to help you achieve a comfortable and secure retirement.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "investment-advisory",
@@ -1109,20 +526,6 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Guidance on investment strategies, portfolio management, and risk assessment.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "superannuation-strategies",
@@ -1130,20 +533,6 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Maximizing your superannuation contributions and tax benefits for long-term wealth building.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "tax-effective-investing",
@@ -1151,20 +540,6 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Structuring your investments to minimize tax liabilities and maximize returns.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
         {
           id: "estate-planning",
@@ -1172,24 +547,9 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Ensuring a smooth transfer of wealth through wills, trusts, and tax-efficient strategies.",
           type: "withOptions",
-          options: [
-            { value: "admin", label: "Admin", rate: 75 },
-            { value: "junior", label: "Junior Accountant", rate: 100 },
-            { value: "standard", label: "Standard", rate: 150 },
-            {
-              value: "intermediate",
-              label: "Intermediate Accountant",
-              rate: 200,
-            },
-            { value: "senior", label: "Senior Manager", rate: 400 },
-            { value: "partner", label: "Partner", rate: 600 },
-          ],
-          selectedOption: undefined,
-          quantity: undefined,
         },
       ],
     },
-
     {
       id: "fixed-costs",
       name: "Adjustments",
@@ -1199,40 +559,31 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           name: "Additional Fixed Cost",
           description: "Any additional fixed cost.",
           type: "fixedCost",
-          value: undefined, // Initially undefined
+          value: undefined,
         },
         {
           id: "fixed-cost-2",
           name: "Discounts",
           description: "Enter a negative amount for a discount.",
           type: "fixedCost",
-          value: undefined, // Initially undefined
+          value: undefined,
         },
       ],
     },
-
-    // Add other sections and services as needed
-    // Empty Service
-    // {
-    //   id: "",
-    //   name: "",
-    //   services: [
-    //     {
-    //       id: "",
-    //       name: " ",
-    //       description: " ",
-    //       type: "withOptions",
-    //       options: [{ value: "junior", label: "Junior Accountant", rate: 75 },
-    //       { value: "standard", label: "Standard", rate: 150},
-    //       { value: "senior", label: "Senior Accountant", rate: 300},
-    //       { value: "partner", label: "Partner Rate", rate: 600},
-    //       ],
-    //       selectedOption: undefined,
-    //       quantity: undefined,
-    //     },
-    //   ],
-    // },
   ],
+
+  // Helper method to get service options
+  getServiceOptions: (sectionId, serviceId) => {
+    const section = get().sections.find((s) => s.id === sectionId);
+    if (!section) return [];
+
+    const service = section.services.find((s) => s.id === serviceId);
+    if (!service || service.type !== "withOptions") return [];
+
+    // Return custom rates if defined, otherwise return standard rates
+    return service.rateOptions || getStandardRateOptions();
+  },
+
   toggleService: (sectionId, serviceId) =>
     set((state) => ({
       sections: state.sections.map((section) =>
@@ -1246,7 +597,8 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
                         ...service,
                         selectedOption:
                           service.selectedOption === undefined
-                            ? service.options[0].value
+                            ? (service.rateOptions ||
+                                getStandardRateOptions())[0].value
                             : undefined,
                         quantity:
                           service.quantity === undefined ? 1 : undefined,
@@ -1254,7 +606,7 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
                     : service.type === "fixedCost"
                     ? {
                         ...service,
-                        value: service.value === undefined ? 0 : undefined, // Default to 0
+                        value: service.value === undefined ? 0 : undefined,
                       }
                     : service
                   : service
@@ -1263,6 +615,7 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           : section
       ),
     })),
+
   updateOption: (sectionId, serviceId, option) =>
     set((state) => ({
       sections: state.sections.map((section) =>
@@ -1278,6 +631,7 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           : section
       ),
     })),
+
   updateQuantity: (sectionId, serviceId, quantity) =>
     set((state) => ({
       sections: state.sections.map((section) =>
@@ -1293,6 +647,39 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           : section
       ),
     })),
+
+  updateCustomRate: (sectionId, serviceId, rate) =>
+    set((state) => ({
+      sections: state.sections.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              services: section.services.map((service) =>
+                service.id === serviceId && service.type === "withOptions"
+                  ? { ...service, customRate: rate }
+                  : service
+              ),
+            }
+          : section
+      ),
+    })),
+
+  toggleCustomRate: (sectionId, serviceId) =>
+    set((state) => ({
+      sections: state.sections.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              services: section.services.map((service) =>
+                service.id === serviceId && service.type === "withOptions"
+                  ? { ...service, useCustomRate: !service.useCustomRate }
+                  : service
+              ),
+            }
+          : section
+      ),
+    })),
+
   updateFixedCost: (sectionId, serviceId, value) =>
     set((state) => ({
       sections: state.sections.map((section) =>
@@ -1301,15 +688,16 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
               ...section,
               services: section.services.map((service) =>
                 service.id === serviceId && service.type === "fixedCost"
-                  ? { ...service, value: value } // >= 0 ? value : 0 } // Prevent negative values
+                  ? { ...service, value: value }
                   : service
               ),
             }
           : section
       ),
     })),
+
   totalCost: () => {
-    const { sections, fixedServices, discount } = get();
+    const { sections, discount, getServiceOptions } = get();
     const sectionsTotal = sections.reduce((sectionTotal, section) => {
       return (
         sectionTotal +
@@ -1319,31 +707,31 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             service.selectedOption &&
             service.quantity
           ) {
-            const selectedOption = service.options.find(
-              (opt) => opt.value === service.selectedOption
-            );
-            if (selectedOption) {
-              return serviceTotal + selectedOption.rate * service.quantity; // Rate * Quantity
-            }
+            // Use custom rate if enabled, otherwise use selected option rate
+            const rate =
+              service.useCustomRate && service.customRate !== undefined
+                ? service.customRate
+                : getServiceOptions(section.id, service.id).find(
+                    (opt) => opt.value === service.selectedOption
+                  )?.rate || 0;
+
+            return serviceTotal + rate * service.quantity;
           } else if (
             service.type === "fixedCost" &&
             service.value !== undefined
           ) {
-            return serviceTotal + service.value; // Add fixed cost value
+            return serviceTotal + service.value;
           }
           return serviceTotal;
         }, 0)
       );
     }, 0);
 
-    const fixedServicesTotal = fixedServices.reduce((total, service) => {
-      return total + service.amount;
-    }, 0);
-
     const discountAmount = discount.amount || 0;
 
-    return Math.max(0, sectionsTotal + fixedServicesTotal - discountAmount);
+    return Math.max(0, sectionsTotal - discountAmount);
   },
+
   addSection: (name) =>
     set((state) => ({
       sections: [
@@ -1351,6 +739,7 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
         { id: Date.now().toString(), name, services: [] },
       ],
     })),
+
   updateClientGroup: (clientGroup) =>
     set((state) => ({
       clientInfo: {
@@ -1358,6 +747,23 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
         clientGroup,
       },
     })),
+
+  updateClientAddress: (address) =>
+    set((state) => ({
+      clientInfo: {
+        ...state.clientInfo,
+        address,
+      },
+    })),
+
+  updateContactPerson: (contactPerson) =>
+    set((state) => ({
+      clientInfo: {
+        ...state.clientInfo,
+        contactPerson,
+      },
+    })),
+
   addEntity: () =>
     set((state) => ({
       clientInfo: {
@@ -1375,6 +781,7 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
         ],
       },
     })),
+
   removeEntity: (entityId) =>
     set((state) => ({
       clientInfo: {
@@ -1384,6 +791,7 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
         ),
       },
     })),
+
   updateEntity: (entityId, field, value) =>
     set((state) => ({
       clientInfo: {
@@ -1393,29 +801,7 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
         ),
       },
     })),
-  addFixedService: () =>
-    set((state) => ({
-      fixedServices: [
-        ...state.fixedServices,
-        {
-          id: Date.now().toString(),
-          description: "",
-          amount: 0,
-        },
-      ],
-    })),
-  removeFixedService: (serviceId) =>
-    set((state) => ({
-      fixedServices: state.fixedServices.filter(
-        (service) => service.id !== serviceId
-      ),
-    })),
-  updateFixedService: (serviceId, field, value) =>
-    set((state) => ({
-      fixedServices: state.fixedServices.map((service) =>
-        service.id === serviceId ? { ...service, [field]: value } : service
-      ),
-    })),
+
   updateDiscount: (field, value) =>
     set((state) => ({
       discount: {

@@ -39,6 +39,8 @@ export default function ClientInfoForm() {
   const {
     clientInfo,
     updateClientGroup,
+    updateClientAddress,
+    updateContactPerson,
     addEntity,
     removeEntity,
     updateEntity,
@@ -101,18 +103,49 @@ export default function ClientInfoForm() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6" suppressHydrationWarning>
-          {/* Client Group */}
-          <div className="space-y-2" suppressHydrationWarning>
-            <Label htmlFor="client-group" suppressHydrationWarning>
-              Client Group
-            </Label>
-            <Input
-              id="client-group"
-              placeholder="Enter client group name"
-              value={clientInfo.clientGroup}
-              onChange={(e) => updateClientGroup(e.target.value)}
-              suppressHydrationWarning
-            />
+          {/* Client Information - Single Row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4" suppressHydrationWarning>
+            {/* Client Group */}
+            <div className="space-y-2" suppressHydrationWarning>
+              <Label htmlFor="client-group" suppressHydrationWarning>
+                Client Group
+              </Label>
+              <Input
+                id="client-group"
+                placeholder="Enter client group name"
+                value={clientInfo.clientGroup}
+                onChange={(e) => updateClientGroup(e.target.value)}
+                suppressHydrationWarning
+              />
+            </div>
+
+            {/* Address */}
+            <div className="space-y-2" suppressHydrationWarning>
+              <Label htmlFor="client-address" suppressHydrationWarning>
+                Address
+              </Label>
+              <Input
+                id="client-address"
+                placeholder="Enter client address"
+                value={clientInfo.address}
+                onChange={(e) => updateClientAddress(e.target.value)}
+                suppressHydrationWarning
+              />
+            </div>
+
+            {/* Contact Person */}
+            <div className="space-y-2" suppressHydrationWarning>
+              <Label htmlFor="contact-person" suppressHydrationWarning>
+                Contact Person
+              </Label>
+              <Input
+                id="contact-person"
+                placeholder="Enter contact person name"
+                value={clientInfo.contactPerson}
+                onChange={(e) => updateContactPerson(e.target.value)}
+                suppressHydrationWarning
+              />
+            </div>
           </div>
 
           {/* Entities Section */}

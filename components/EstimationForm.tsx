@@ -2,7 +2,6 @@
 
 import ClientInfoForm from "./ClientInfoForm";
 import ClientWrapper from "./ClientWrapper";
-import FixedServicesForm from "./FixedServicesForm";
 import ServiceCard from "./ServiceCard";
 import SummaryCard from "./SummaryCard";
 import { motion } from "framer-motion";
@@ -578,7 +577,6 @@ export default function EstimationForm() {
       >
         <div className="space-y-6" suppressHydrationWarning>
           <ClientInfoForm />
-          <FixedServicesForm />
 
           <div
             className="grid grid-cols-1 xl:grid-cols-4 gap-4"

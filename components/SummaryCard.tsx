@@ -15,6 +15,7 @@ import { Button } from "./ui/button";
 import ClientWrapper from "./ClientWrapper";
 import { Input } from "./ui/input";
 import { jsPDF } from "jspdf";
+import { toast } from "sonner";
 
 const getValidSections = (sections: ServiceSection[]) => {
   return sections.filter((section) => {
@@ -31,11 +32,12 @@ const getValidSections = (sections: ServiceSection[]) => {
 };
 
 export default function SummaryCard() {
-  const { sections, clientInfo, fixedServices, discount, totalCost } =
+  const { sections, clientInfo, discount, totalCost, getServiceOptions } =
     useEstimationStore();
   const [emails, setEmails] = useState<string>("");
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isGeneratingEmail, setIsGeneratingEmail] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -50,192 +52,352 @@ export default function SummaryCard() {
 
   const generatePDFContent = () => {
     const doc = new jsPDF();
+    const pageHeight = doc.internal.pageSize.height;
+    const marginBottom = 20; // Bottom margin
 
-    // Define the logo URL and header height
-    const logoUrl = "/2.png"; // Replace with the actual image path
-    const headerHeight = 30; // Height of the header section
+    // Function to add header to each page
+    const addHeader = () => {
+      // Define the logo URL and header height
+      const logoUrl = "/2.png"; // Replace with the actual image path
+      const headerHeight = 30; // Height of the header section
 
-    // Define the desired width for the logo
-    const logoWidth = 50; // Adjust as needed
-    const logoAspectRatio = 1920 / 536; // Image aspect ratio
-    const logoHeight = logoWidth / logoAspectRatio; // Maintain aspect ratio
+      // Define the desired width for the logo
+      const logoWidth = 50; // Adjust as needed
+      const logoAspectRatio = 1920 / 536; // Image aspect ratio
+      const logoHeight = logoWidth / logoAspectRatio; // Maintain aspect ratio
 
-    // Center the logo within its container
-    const logoX = 20; // Adjust as needed
-    const logoY = headerHeight / 2 - logoHeight / 2; // Center within header
+      // Center the logo within its container
+      const logoX = 20; // Adjust as needed
+      const logoY = headerHeight / 2 - logoHeight / 2; // Center within header
 
-    // Add logo while maintaining aspect ratio
-    doc.addImage(logoUrl, "PNG", logoX, logoY, logoWidth, logoHeight);
+      // Add logo while maintaining aspect ratio
+      doc.addImage(logoUrl, "PNG", logoX, logoY, logoWidth, logoHeight);
 
-    // Add contact information
+      // Add contact information
+      doc.setFontSize(10);
+      doc.setTextColor(100); // Gray color for contact info
+      doc.text("Integritas Accountants and Advisers Pty Ltd", 80, 15);
+      doc.text("Level 1/75 Moreland St, Footscray, 3011", 80, 20);
+      doc.text("Phone: 1300 829 825 | Email: info@integritas.com.au", 80, 25);
+
+      // Draw a horizontal line below the header
+      doc.setDrawColor(200); // Light gray color for the line
+      doc.line(20, headerHeight, 190, headerHeight);
+
+      return headerHeight + 15; // Return starting Y position for content
+    };
+
+    // Function to check if we need a new page
+    const checkPageBreak = (currentY: number, requiredSpace: number) => {
+      if (currentY + requiredSpace > pageHeight - marginBottom) {
+        doc.addPage();
+        return addHeader();
+      }
+      return currentY;
+    };
+
+    // Add initial header
+    let yPosition = addHeader();
+
+    // Add date
+    yPosition = checkPageBreak(yPosition, 20);
     doc.setFontSize(10);
-    doc.setTextColor(100); // Gray color for contact info
-    doc.text("Integritas Accountants and Advisers Pty Ltd", 80, 15);
-    doc.text("Level 1/75 Moreland St, Footscray, 3011", 80, 20);
-    doc.text("Phone: 1300 829 825 | Email: info@integritas.com.au", 80, 25);
+    doc.setTextColor(100);
+    const currentDate = new Date().toLocaleDateString("en-AU", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+    doc.text(`Date: ${currentDate}`, 140, yPosition);
+    yPosition += 15;
 
-    // Draw a horizontal line below the header
-    doc.setDrawColor(200); // Light gray color for the line
-    doc.line(20, headerHeight, 190, headerHeight);
-
-    // Add the main content
-    doc.setFontSize(20);
-    doc.setTextColor(0); // Black color for the title
-    doc.text("Estimate Summary", 20, headerHeight + 15);
-    doc.setFontSize(12);
-    let yPosition = headerHeight + 25; // Start content below the header
-
-    // Add client information if available
+    // Add client information (To section)
     if (clientInfo.clientGroup || clientInfo.entities.some((e) => e.name)) {
-      doc.setFontSize(14);
+      yPosition = checkPageBreak(yPosition, 50);
+      doc.setFontSize(12);
       doc.setTextColor(0);
-      doc.text("Client Information", 20, yPosition);
-      yPosition += 10;
+      doc.text("To:", 20, yPosition);
+      yPosition += 8;
 
       if (clientInfo.clientGroup) {
-        doc.setFontSize(12);
+        doc.setFontSize(11);
+        doc.setTextColor(0);
+        doc.text(`${clientInfo.clientGroup}`, 20, yPosition);
+        yPosition += 6;
+      }
+
+      if (clientInfo.address) {
+        doc.setFontSize(10);
         doc.setTextColor(100);
-        doc.text(`Client Group: ${clientInfo.clientGroup}`, 30, yPosition);
+        doc.text(`${clientInfo.address}`, 20, yPosition);
         yPosition += 8;
       }
 
-      clientInfo.entities.forEach((entity, index) => {
-        if (entity.name) {
-          doc.setFontSize(12);
+      // Add entity details with full information
+      const entitiesWithData = clientInfo.entities.filter(
+        (entity) => entity.name
+      );
+
+      if (entitiesWithData.length > 0) {
+        doc.setFontSize(10);
+        doc.setTextColor(100);
+        doc.text("Entities:", 20, yPosition);
+        yPosition += 6;
+
+        entitiesWithData.forEach((entity) => {
+          // Entity name and type
+          doc.setFontSize(9);
           doc.setTextColor(0);
-          doc.text(`Entity ${index + 1}:`, 30, yPosition);
-          yPosition += 6;
+          const entityLine1 = `• ${entity.name}${
+            entity.entityType ? ` (${entity.entityType})` : ""
+          }`;
+          doc.text(entityLine1, 25, yPosition);
+          yPosition += 5;
 
-          // Entity details in one line
-          doc.setTextColor(100);
-          const entityDetails = [
-            entity.name,
-            entity.entityType,
-            entity.businessType,
-          ]
-            .filter(Boolean)
-            .join(" | ");
+          // Business industry and Xero status
+          const details = [];
+          if (entity.businessType) {
+            details.push(`Industry: ${entity.businessType}`);
+          }
+          details.push(`Xero: ${entity.hasXeroFile ? "Yes" : "No"}`);
+          if (!entity.hasXeroFile && entity.accountingSoftware) {
+            details.push(`Current software: ${entity.accountingSoftware}`);
+          }
 
-          doc.text(entityDetails, 40, yPosition);
-          yPosition += 6;
+          if (details.length > 0) {
+            doc.setFontSize(8);
+            doc.setTextColor(100);
+            doc.text(`  ${details.join(" | ")}`, 25, yPosition);
+            yPosition += 5;
+          }
 
-          // Xero subscription in separate line
-          const xeroStatus = entity.hasXeroFile
-            ? "Xero subscription: Yes"
-            : `Xero subscription: No${
-                entity.accountingSoftware
-                  ? ` | Current software: ${entity.accountingSoftware}`
-                  : ""
-              }`;
+          yPosition += 2; // Small gap between entities
+        });
 
-          doc.text(xeroStatus, 40, yPosition);
-          yPosition += 8;
-        }
-      });
+        yPosition += 6; // Space after entities section
+      }
 
-      yPosition += 5; // Add space before services
+      yPosition += 10; // Add space before letter content
     }
 
-    // Add fixed services first if any
-    if (fixedServices.length > 0) {
-      doc.setFontSize(14);
-      doc.setTextColor(0);
-      doc.text("Fixed Services", 20, yPosition);
-      yPosition += 10;
+    // Add professional letter opening
+    doc.setFontSize(14);
+    doc.setTextColor(0);
+    doc.text("Quotation", 20, yPosition);
+    yPosition += 15;
 
-      fixedServices.forEach((service) => {
-        if (service.description && service.amount > 0) {
-          doc.setFontSize(12);
-          doc.setTextColor(1);
-          doc.text(service.description, 30, yPosition);
-          doc.setTextColor(100);
-          doc.text(`$${service.amount.toFixed(2)}`, 130, yPosition);
-          yPosition += 6;
-        }
-      });
-      yPosition += 5;
-    }
+    doc.setFontSize(11);
+    doc.setTextColor(0);
+    const greeting = clientInfo.contactPerson
+      ? `Dear ${clientInfo.contactPerson},`
+      : "Dear Valued Client,";
+    doc.text(greeting, 20, yPosition);
+    yPosition += 10;
+
+    // Add introduction paragraph
+    doc.setFontSize(10);
+    doc.setTextColor(0);
+    const introText =
+      "Thank you for considering Integritas Accountants and Advisers for your accounting and advisory needs. We are pleased to present this proposal outlining our professional services tailored to your specific requirements.";
+    const splitIntro = doc.splitTextToSize(introText, 170);
+    doc.text(splitIntro, 20, yPosition);
+    yPosition += splitIntro.length * 5 + 10;
 
     // Filter sections with valid services
     const validSections = getValidSections(sections);
 
-    // Add sections and services
-    validSections.forEach((section) => {
-      doc.setFontSize(14);
-      doc.setTextColor(0); // Black color for section titles
-      doc.text(section.name, 20, yPosition);
-      yPosition += 10;
-
+    if (validSections.length > 0) {
+      // Add services section header
+      yPosition = checkPageBreak(yPosition, 30);
       doc.setFontSize(12);
-      section.services.forEach((service) => {
-        if (
-          service.type === "withOptions" &&
-          service.selectedOption &&
-          service.quantity
-        ) {
-          const selectedOption = service.options.find(
-            (opt) => opt.value === service.selectedOption
-          );
-          if (!selectedOption) return;
-
-          // Calculate the total amount
-          const totalAmount = selectedOption.rate * service.quantity;
-
-          // Service name and option
-          doc.setTextColor(1); // Black color for service name
-          doc.text(`${service.name} (${selectedOption.label})`, 30, yPosition);
-
-          // Rate and quantity in one line: "Quantity x Rate = Total"
-          doc.setTextColor(100); // Gray color for details
-          doc.text(
-            `${service.quantity} x $${
-              selectedOption.rate
-            }/unit = $${totalAmount.toFixed(2)}`,
-            130,
-            yPosition
-          );
-
-          // Move to the next line
-          yPosition += 5;
-        } else if (
-          service.type === "fixedCost" &&
-          service.value !== undefined
-        ) {
-          // Handle fixed costs
-          doc.setTextColor(1); // Black color for service name
-          doc.text(`${service.name}`, 30, yPosition);
-          doc.setTextColor(100); // Gray color for details
-          doc.text(`Fixed Cost: $${service.value.toFixed(2)}`, 130, yPosition);
-          yPosition += 5;
-        }
-        yPosition += 1; // Add some space between services
-      });
-      yPosition += 5; // Add some space between sections
-    });
-
-    // Add discount if applicable
-    if (discount.amount > 0) {
-      doc.setFontSize(14);
       doc.setTextColor(0);
-      doc.text("Discount", 20, yPosition);
+      doc.text("Professional Services", 20, yPosition);
       yPosition += 10;
 
-      doc.setFontSize(12);
-      doc.setTextColor(1);
-      doc.text(discount.description || "Discount Applied", 30, yPosition);
+      // Add column headers with better spacing
+      doc.setFontSize(9);
       doc.setTextColor(100);
-      doc.text(`-$${discount.amount.toFixed(2)}`, 130, yPosition);
+      doc.text("Service Description", 20, yPosition);
+      doc.text("Hours", 120, yPosition, { align: "center" });
+      doc.text("Rate", 145, yPosition, { align: "center" });
+      doc.text("Amount", 175, yPosition, { align: "right" });
+      yPosition += 5;
+
+      // Add a line under headers
+      doc.setDrawColor(200);
+      doc.line(20, yPosition, 190, yPosition);
       yPosition += 8;
+
+      // Add services by section
+      validSections.forEach((section) => {
+        // Section header
+        yPosition = checkPageBreak(yPosition, 20);
+        doc.setFontSize(10);
+        doc.setTextColor(50);
+        doc.text(`${section.name.toUpperCase()}`, 20, yPosition);
+        yPosition += 8;
+
+        // Services in this section
+        section.services.forEach((service) => {
+          if (
+            service.type === "withOptions" &&
+            service.selectedOption &&
+            service.quantity
+          ) {
+            const serviceOptions = getServiceOptions(section.id, service.id);
+            const selectedOption = serviceOptions.find(
+              (opt) => opt.value === service.selectedOption
+            );
+            if (!selectedOption) return;
+
+            const totalAmount = selectedOption.rate * service.quantity;
+
+            // Find the original service definition to get description
+            const originalService = sections
+              .find((s) => s.id === section.id)
+              ?.services.find((s) => s.id === service.id);
+
+            // Check if we need space for service + description
+            const estimatedServiceHeight = originalService?.description
+              ? 40
+              : 15;
+            yPosition = checkPageBreak(yPosition, estimatedServiceHeight);
+
+            // Service name
+            doc.setFontSize(9);
+            doc.setTextColor(0);
+            const serviceName = doc.splitTextToSize(service.name, 95);
+            doc.text(serviceName, 25, yPosition);
+
+            // Hours, Rate, Investment on the same line as service name
+            doc.setTextColor(100);
+            doc.text(`${service.quantity}`, 120, yPosition, {
+              align: "center",
+            });
+
+            doc.text(`$${selectedOption.rate.toFixed(0)}`, 145, yPosition, {
+              align: "center",
+            });
+
+            doc.setTextColor(0);
+            doc.text(`$${totalAmount.toFixed(2)}`, 175, yPosition, {
+              align: "right",
+            });
+
+            yPosition += serviceName.length * 4 + 2;
+
+            // Add service description below the service name
+            if (originalService?.description) {
+              doc.setFontSize(8);
+              doc.setTextColor(120);
+              const description = doc.splitTextToSize(
+                originalService.description,
+                90
+              );
+              doc.text(description, 25, yPosition);
+              yPosition += description.length * 3 + 3;
+            }
+          } else if (
+            service.type === "fixedCost" &&
+            service.value !== undefined
+          ) {
+            // Find the original service definition to get description
+            const originalService = sections
+              .find((s) => s.id === section.id)
+              ?.services.find((s) => s.id === service.id);
+
+            // Check if we need space for service + description
+            const estimatedServiceHeight = originalService?.description
+              ? 40
+              : 15;
+            yPosition = checkPageBreak(yPosition, estimatedServiceHeight);
+
+            // Fixed cost service name
+            doc.setFontSize(9);
+            doc.setTextColor(0);
+            const serviceName = doc.splitTextToSize(service.name, 95);
+            doc.text(serviceName, 25, yPosition);
+
+            // Investment
+            doc.text(`$${service.value.toFixed(2)}`, 175, yPosition, {
+              align: "right",
+            });
+
+            yPosition += serviceName.length * 4 + 2;
+
+            // Add service description below the service name
+            if (originalService?.description) {
+              doc.setFontSize(8);
+              doc.setTextColor(120);
+              const description = doc.splitTextToSize(
+                originalService.description,
+                90
+              );
+              doc.text(description, 25, yPosition);
+              yPosition += description.length * 3 + 3;
+            }
+          }
+        });
+        yPosition += 5; // Space between sections
+      });
+
+      // Add discount if applicable
+      if (discount.amount > 0) {
+        yPosition = checkPageBreak(yPosition, 25);
+        yPosition += 5;
+        doc.setFontSize(10);
+        doc.setTextColor(0);
+        doc.text("DISCOUNT APPLIED", 20, yPosition);
+        yPosition += 6;
+
+        doc.setFontSize(9);
+        doc.setTextColor(100);
+        doc.text(discount.description || "Special Discount", 25, yPosition);
+        doc.setTextColor(0);
+        doc.text(`-$${discount.amount.toFixed(2)}`, 175, yPosition, {
+          align: "right",
+        });
+        yPosition += 8;
+      }
+
+      // Total section
+      yPosition = checkPageBreak(yPosition, 30);
+      yPosition += 5;
+      doc.setDrawColor(0);
+      doc.line(120, yPosition, 190, yPosition);
+      yPosition += 8;
+
+      doc.setFontSize(12);
+      doc.setTextColor(0);
+      doc.text("TOTAL:", 120, yPosition);
+      doc.setFontSize(14);
+      doc.text(`$${(total || 0).toFixed(2)}`, 175, yPosition, {
+        align: "right",
+      });
+      yPosition += 15;
     }
 
-    // Add a horizontal line above the total
-    doc.setDrawColor(200); // Light gray color for the line
-    doc.line(20, yPosition, 190, yPosition);
+    // Add closing paragraph
+    yPosition = checkPageBreak(yPosition, 40);
+    doc.setFontSize(10);
+    doc.setTextColor(0);
+    const closingText =
+      "All fees are quoted in Australian dollars and exclude GST where applicable. We look forward to the opportunity to work with you and provide exceptional service tailored to your needs.";
+    const splitClosing = doc.splitTextToSize(closingText, 170);
+    doc.text(splitClosing, 20, yPosition);
+    yPosition += splitClosing.length * 5 + 15;
 
-    // Add the total estimate with safe number handling
-    doc.setFontSize(16);
-    doc.setTextColor(0); // Black color for the total
-    doc.text(`Total Estimate: $${(total || 0).toFixed(2)}`, 20, yPosition + 5);
+    // Add signature section
+    doc.setFontSize(11);
+    doc.setTextColor(0);
+    doc.text("Yours sincerely,", 20, yPosition);
+    yPosition += 20;
+
+    doc.text("Integritas Accountants and Advisers", 20, yPosition);
+    yPosition += 6;
+    doc.setFontSize(9);
+    doc.setTextColor(100);
+    doc.text("Professional Accounting Services", 20, yPosition);
 
     return doc;
   };
@@ -245,15 +407,248 @@ export default function SummaryCard() {
     doc.save("estimate.pdf");
   };
 
+  const generateEmailContent = () => {
+    const validSections = getValidSections(sections);
+
+    // Generate services summary
+    let servicesHtml = "";
+    validSections.forEach((section) => {
+      servicesHtml += `
+        <tr>
+          <td colspan="3" style="background-color: #f8f9fa; padding: 8px; font-weight: bold; border-top: 1px solid #dee2e6;">
+            ${section.name.toUpperCase()}
+          </td>
+        </tr>`;
+
+      section.services.forEach((service) => {
+        if (
+          service.type === "withOptions" &&
+          service.selectedOption &&
+          service.quantity
+        ) {
+          const serviceOptions = getServiceOptions(section.id, service.id);
+          const selectedOption = serviceOptions.find(
+            (opt) => opt.value === service.selectedOption
+          );
+          if (selectedOption) {
+            const totalAmount = selectedOption.rate * service.quantity;
+            servicesHtml += `
+              <tr>
+                <td style="padding: 6px; border-bottom: 1px solid #eee;">${
+                  service.name
+                }</td>
+                <td style="padding: 6px; border-bottom: 1px solid #eee; text-align: center;">${
+                  service.quantity
+                } hrs</td>
+                <td style="padding: 6px; border-bottom: 1px solid #eee; text-align: right;">$${totalAmount.toFixed(
+                  2
+                )}</td>
+              </tr>`;
+          }
+        } else if (
+          service.type === "fixedCost" &&
+          service.value !== undefined
+        ) {
+          servicesHtml += `
+            <tr>
+              <td style="padding: 6px; border-bottom: 1px solid #eee;">${
+                service.name
+              }</td>
+              <td style="padding: 6px; border-bottom: 1px solid #eee; text-align: center;">-</td>
+              <td style="padding: 6px; border-bottom: 1px solid #eee; text-align: right;">$${service.value.toFixed(
+                2
+              )}</td>
+            </tr>`;
+        }
+      });
+    });
+
+    // Client information
+    const clientName =
+      clientInfo.contactPerson || clientInfo.clientGroup || "Valued Client";
+
+    return `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;">
+        <div style="background-color: #2c5282; color: white; padding: 20px; text-align: center;">
+          <h1 style="margin: 0; font-size: 24px;">Professional Services Proposal</h1>
+          <p style="margin: 5px 0 0 0; font-size: 14px;">Integritas Accountants and Advisers</p>
+        </div>
+        
+        <div style="padding: 30px; background-color: #ffffff;">
+          <p style="font-size: 16px; margin-bottom: 20px;">
+            Dear ${clientName},
+          </p>
+          
+          <p style="line-height: 1.6; margin-bottom: 20px;">
+            Thank you for considering Integritas Accountants and Advisers for your accounting and advisory needs. 
+            We are pleased to present this comprehensive proposal outlining our professional services tailored to your specific requirements.
+          </p>
+          
+          ${
+            clientInfo.entities.some((e) => e.name)
+              ? `
+          <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <h3 style="margin-top: 0; color: #2c5282;">Client Information</h3>
+            ${
+              clientInfo.clientGroup
+                ? `<p style="margin: 5px 0;"><strong>Client Group:</strong> ${clientInfo.clientGroup}</p>`
+                : ""
+            }
+            ${
+              clientInfo.address
+                ? `<p style="margin: 5px 0;"><strong>Address:</strong> ${clientInfo.address}</p>`
+                : ""
+            }
+            
+            <h4 style="margin: 15px 0 10px 0; color: #4a5568;">Entities:</h4>
+                         ${clientInfo.entities
+                           .map((entity) =>
+                             entity.name
+                               ? `
+                 <div style="margin-bottom: 10px; padding-left: 15px;">
+                   <p style="margin: 2px 0; font-weight: bold;">• ${
+                     entity.name
+                   } (${entity.entityType || "N/A"})</p>
+                  <p style="margin: 2px 0; font-size: 14px; color: #666;">
+                    Industry: ${entity.businessType || "N/A"} | 
+                    Xero: ${entity.hasXeroFile ? "Yes" : "No"}
+                    ${
+                      !entity.hasXeroFile && entity.accountingSoftware
+                        ? ` | Current software: ${entity.accountingSoftware}`
+                        : ""
+                    }
+                  </p>
+                </div>
+              `
+                               : ""
+                           )
+                           .join("")}
+          </div>
+          `
+              : ""
+          }
+          
+          <h3 style="color: #2c5282; margin-bottom: 15px;">Proposed Services</h3>
+          
+          <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; border: 1px solid #dee2e6;">
+            <thead>
+              <tr style="background-color: #2c5282; color: white;">
+                <th style="padding: 10px; text-align: left; border-bottom: 1px solid #dee2e6;">Service Description</th>
+                <th style="padding: 10px; text-align: center; border-bottom: 1px solid #dee2e6;">Hours</th>
+                <th style="padding: 10px; text-align: right; border-bottom: 1px solid #dee2e6;">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${servicesHtml}
+              ${
+                discount.amount > 0
+                  ? `
+                <tr>
+                  <td colspan="2" style="padding: 8px; font-weight: bold; color: #e53e3e;">Discount Applied</td>
+                  <td style="padding: 8px; text-align: right; font-weight: bold; color: #e53e3e;">-$${discount.amount.toFixed(
+                    2
+                  )}</td>
+                </tr>
+              `
+                  : ""
+              }
+              <tr style="background-color: #f8f9fa; font-weight: bold; font-size: 16px;">
+                <td colspan="2" style="padding: 12px; border-top: 2px solid #2c5282;">TOTAL:</td>
+                <td style="padding: 12px; text-align: right; border-top: 2px solid #2c5282; color: #2c5282;">$${(
+                  total || 0
+                ).toFixed(2)}</td>
+              </tr>
+            </tbody>
+          </table>
+          
+          <div style="background-color: #e6fffa; padding: 15px; border-radius: 5px; border-left: 4px solid #38b2ac; margin-bottom: 20px;">
+            <h4 style="margin-top: 0; color: #2d3748;">Important Notes:</h4>
+            <ul style="margin: 10px 0; padding-left: 20px; line-height: 1.6;">
+              <li>All fees are quoted in Australian dollars and exclude GST where applicable</li>
+              <li>Services will commence upon acceptance of this proposal</li>
+            </ul>
+          </div>
+          
+          <p style="line-height: 1.6; margin-bottom: 20px;">
+            We look forward to the opportunity to work with you and provide exceptional service tailored to your needs. 
+            Our experienced team is committed to delivering professional, reliable, and cost-effective solutions for your business.
+          </p>
+          
+          <p style="line-height: 1.6; margin-bottom: 20px;">
+            Should you have any questions about this proposal or require any clarifications, please don't hesitate to contact us. 
+            We are here to help and would be delighted to discuss how we can best serve your accounting and advisory requirements.
+          </p>
+          
+          <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+            <p style="margin-bottom: 5px;"><strong>Yours sincerely,</strong></p>
+            <p style="margin-bottom: 5px; font-weight: bold; color: #2c5282;">Integritas Accountants and Advisers</p>
+            <p style="margin-bottom: 20px; font-style: italic; color: #666;">Professional Accounting Services</p>
+          </div>
+        </div>
+        
+        <div style="background-color: #2c5282; color: white; padding: 15px; text-align: center; font-size: 12px;">
+          <p style="margin: 0;">Level 1/75 Moreland St, Footscray, 3011</p>
+          <p style="margin: 5px 0 0 0;">Phone: 1300 829 825 | Email: info@integritas.com.au</p>
+        </div>
+      </div>
+    `;
+  };
+
   const handleEmailEstimate = async () => {
-    const doc = generatePDFContent();
-    const pdfBase64 = doc.output("datauristring");
     const emailList = emails.split(",").map((email) => email.trim());
     if (emailList.length === 0 || emailList[0] === "") {
-      alert("Please enter at least one valid email address.");
+      toast.error("Please enter at least one valid email address.");
       return;
     }
+
+    setIsGeneratingEmail(true);
+
+    // Show initial progress
+    toast.loading("Preparing email...", {
+      id: "email-progress",
+      description: "Generating PDF content",
+    });
+
     try {
+      // Generate PDF content
+      console.log("🔄 Generating PDF content...");
+      const doc = generatePDFContent();
+
+      // Update progress
+      toast.loading("Preparing email...", {
+        id: "email-progress",
+        description: "Converting PDF to attachment",
+      });
+
+      console.log("🔄 Converting PDF to base64...");
+      const pdfBase64 = doc.output("datauristring");
+
+      // Update progress
+      toast.loading("Preparing email...", {
+        id: "email-progress",
+        description: "Generating email content",
+      });
+
+      console.log("🔄 Generating email content...");
+      const emailContent = generateEmailContent();
+
+      const clientName =
+        clientInfo.contactPerson || clientInfo.clientGroup || "Client";
+      const currentDate = new Date().toLocaleDateString("en-AU", {
+        day: "2-digit",
+        month: "long",
+        year: "numeric",
+      });
+
+      // Final progress update
+      toast.loading("Sending email...", {
+        id: "email-progress",
+        description: `Sending to ${emailList.length} recipient${
+          emailList.length > 1 ? "s" : ""
+        }`,
+      });
+
+      console.log("🔄 Sending email...");
       const response = await fetch("/api/send-email", {
         method: "POST",
         headers: {
@@ -261,31 +656,63 @@ export default function SummaryCard() {
         },
         body: JSON.stringify({
           to: emailList,
-          subject: "Your Accounting Service Estimate",
-          message: "Please find attached your estimate.",
+          subject: `Professional Services Proposal - ${clientName} - ${currentDate}`,
+          message: emailContent,
           attachments: [
             {
-              filename: "estimate.pdf",
+              filename: `Integritas_Proposal_${clientName.replace(
+                /[^a-zA-Z0-9]/g,
+                "_"
+              )}_${new Date().toISOString().split("T")[0]}.pdf`,
               content: pdfBase64.split("base64,")[1],
               encoding: "base64",
             },
           ],
         }),
       });
+
+      // Check if response is JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        const textResponse = await response.text();
+        console.error(
+          "❌ Non-JSON response received:",
+          textResponse.substring(0, 200)
+        );
+        throw new Error(
+          `Server returned non-JSON response. Status: ${response.status}`
+        );
+      }
+
       const responseData = await response.json();
       console.log("Email API Response:", responseData);
+
       if (response.ok) {
-        alert("Estimate sent successfully!");
+        console.log("✅ Email sent successfully!");
+        toast.dismiss("email-progress");
+        toast.success("Estimate sent successfully!", {
+          description: `Email sent to ${emailList.length} recipient${
+            emailList.length > 1 ? "s" : ""
+          }`,
+        });
       } else {
-        throw new Error(responseData.error || "Failed to send email");
+        const errorMessage = responseData.details
+          ? `${responseData.error}\n\nDetails: ${responseData.details}`
+          : responseData.error || "Failed to send email";
+        throw new Error(errorMessage);
       }
     } catch (error) {
-      console.error("Error sending email:", error);
+      console.error("❌ Error sending email:", error);
+      toast.dismiss("email-progress");
       if (error instanceof Error) {
-        alert(`Error: ${error.message}`);
+        toast.error("Failed to send email", {
+          description: error.message,
+        });
       } else {
-        alert("An unknown error occurred.");
+        toast.error("An unknown error occurred while sending email.");
       }
+    } finally {
+      setIsGeneratingEmail(false);
     }
   };
 
@@ -392,7 +819,11 @@ export default function SummaryCard() {
                             service.selectedOption &&
                             service.quantity
                           ) {
-                            const selectedOption = service.options.find(
+                            const serviceOptions = getServiceOptions(
+                              section.id,
+                              service.id
+                            );
+                            const selectedOption = serviceOptions.find(
                               (opt) => opt.value === service.selectedOption
                             );
                             if (!selectedOption) return null;
@@ -435,30 +866,6 @@ export default function SummaryCard() {
                   ))}
                 </ul>
 
-                {/* Fixed Services */}
-                {fixedServices.length > 0 && (
-                  <div className="mt-4">
-                    <h3 className="font-semibold mb-2">Fixed Services</h3>
-                    <ul className="space-y-1">
-                      {fixedServices.map(
-                        (service) =>
-                          service.description &&
-                          service.amount > 0 && (
-                            <li
-                              key={service.id}
-                              className="flex justify-between text-sm"
-                            >
-                              <span className="truncate pr-2">
-                                {service.description}
-                              </span>
-                              <span>${service.amount.toFixed(2)}</span>
-                            </li>
-                          )
-                      )}
-                    </ul>
-                  </div>
-                )}
-
                 {/* Discount */}
                 {discount.amount > 0 && (
                   <div className="mt-4">
@@ -493,8 +900,16 @@ export default function SummaryCard() {
                   onClick={handleEmailEstimate}
                   variant="outline"
                   className="w-full"
+                  disabled={isGeneratingEmail}
                 >
-                  Email Estimate
+                  {isGeneratingEmail ? (
+                    <>
+                      <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                      Sending Email...
+                    </>
+                  ) : (
+                    "Email Estimate"
+                  )}
                 </Button>
               </CardFooter>
             </Card>

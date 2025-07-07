@@ -3,7 +3,19 @@ import nodemailer from "nodemailer";
 
 export async function POST(req: Request) {
   try {
-    const { to, subject, message, attachments } = await req.json();
+    // Add better error handling for JSON parsing
+    let requestData;
+    try {
+      requestData = await req.json();
+    } catch (parseError) {
+      console.error("❌ Failed to parse request JSON:", parseError);
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    }
+
+    const { to, subject, message, attachments } = requestData;
 
     if (!to || !subject || !message) {
       console.error("❌ Missing required fields:", { to, subject, message });
@@ -15,39 +27,34 @@ export async function POST(req: Request) {
 
     const recipients = Array.isArray(to) ? to : [to];
 
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-      console.error("❌ SMTP credentials missing in .env");
-      return NextResponse.json(
-        { error: "Email service misconfigured" },
-        { status: 500 }
-      );
-    }
+    // Hardcoded email credentials
+    const EMAIL_USER = "taxtalkaus@gmail.com";
+    const EMAIL_PASS = "cxqp cnws twia pizf";
 
     const transporter = nodemailer.createTransport({
-        host: "smtp.gmail.com",
-        port: 465, // 587 also works
-        secure: true, // true for 465, false for 587
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-        tls: {
-          rejectUnauthorized: false, // 🔴 This bypasses strict certificate checks
-        },
-      });
-      
-      
+      host: "smtp.gmail.com",
+      port: 465, // 587 also works
+      secure: true, // true for 465, false for 587
+      auth: {
+        user: EMAIL_USER,
+        pass: EMAIL_PASS,
+      },
+      tls: {
+        rejectUnauthorized: false, // 🔴 This bypasses strict certificate checks
+      },
+    });
 
     console.log("📨 Sending email to:", recipients);
 
-    const formattedAttachments = attachments?.map((attachment: { filename: string; content: string }) => ({
-      filename: attachment.filename,
-      content: Buffer.from(attachment.content, "base64"),
-      encoding: "base64",
-    })) || [];
+    const formattedAttachments =
+      attachments?.map((attachment: { filename: string; content: string }) => ({
+        filename: attachment.filename,
+        content: Buffer.from(attachment.content, "base64"),
+        encoding: "base64",
+      })) || [];
 
     const info = await transporter.sendMail({
-      from: `"Accounting Company" <${process.env.EMAIL_USER}>`,
+      from: `"Integritas Accountants" <${EMAIL_USER}>`,
       to: recipients.join(","),
       subject,
       html: `<p>${message}</p>`,

@@ -15,13 +15,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ServiceOption, useEstimationStore } from "@/lib/store";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import ClientWrapper from "./ClientWrapper";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { useEstimationStore } from "@/lib/store";
 
 interface ServiceCardProps {
   service: {
@@ -42,7 +42,10 @@ export default function ServiceCard({ service, sectionId }: ServiceCardProps) {
     updateOption,
     updateQuantity,
     updateFixedCost,
+    updateCustomRate,
+    toggleCustomRate,
     toggleService,
+    getServiceOptions,
   } = useEstimationStore();
 
   // Find the corresponding service in the store
@@ -65,6 +68,10 @@ export default function ServiceCard({ service, sectionId }: ServiceCardProps) {
     storeService?.type === "withOptions" ? storeService.quantity : undefined;
   const fixedValue =
     storeService?.type === "fixedCost" ? storeService.value : undefined;
+  const customRate =
+    storeService?.type === "withOptions" ? storeService.customRate : undefined;
+  const useCustomRate =
+    storeService?.type === "withOptions" ? storeService.useCustomRate : false;
 
   const handleToggle = (checked: boolean) => {
     toggleService(sectionId, service.id);
@@ -88,13 +95,33 @@ export default function ServiceCard({ service, sectionId }: ServiceCardProps) {
     updateFixedCost(sectionId, service.id, newValue);
   };
 
+  const handleCustomRateToggle = (checked: boolean) => {
+    toggleCustomRate(sectionId, service.id);
+    if (checked) {
+      toast.success(`Enabled custom rate for ${service.name}`);
+    } else {
+      toast.success(`Disabled custom rate for ${service.name}`);
+    }
+  };
+
+  const handleCustomRateChange = (newRate: number) => {
+    updateCustomRate(sectionId, service.id, newRate);
+  };
+
   // Get rate options from the store service (only for withOptions type)
   const rateOptions =
-    storeService?.type === "withOptions" ? storeService.options : [];
+    storeService?.type === "withOptions"
+      ? getServiceOptions(sectionId, service.id)
+      : [];
 
   const getSelectedRate = () => {
+    if (useCustomRate && customRate) {
+      return customRate;
+    }
     if (!selectedOption || !rateOptions) return 0;
-    const option = rateOptions.find((opt) => opt.value === selectedOption);
+    const option = rateOptions.find(
+      (opt: ServiceOption) => opt.value === selectedOption
+    );
     return option?.rate || 0;
   };
 
@@ -185,96 +212,143 @@ export default function ServiceCard({ service, sectionId }: ServiceCardProps) {
                 >
                   {/* For withOptions services */}
                   {storeService?.type === "withOptions" && (
-                    <>
-                      {/* Rate Selection */}
-                      <div className="space-y-2" suppressHydrationWarning>
-                        <Label
-                          htmlFor={`rate-${service.id}`}
-                          suppressHydrationWarning
-                        >
-                          Select Rate Level
-                        </Label>
-                        <Select
-                          value={selectedOption || ""}
-                          onValueChange={handleOptionChange}
-                        >
-                          <SelectTrigger suppressHydrationWarning>
-                            <SelectValue placeholder="Choose rate level" />
-                          </SelectTrigger>
-                          <SelectContent suppressHydrationWarning>
-                            {rateOptions.map((option) => (
-                              <SelectItem
-                                key={option.value}
-                                value={option.value}
+                    <div className="space-y-4" suppressHydrationWarning>
+                      {/* Form Fields Container */}
+                      <div className="space-y-3" suppressHydrationWarning>
+                        {/* Rate Selection - Hidden when custom rate is active */}
+                        {!useCustomRate && (
+                          <div className="space-y-2" suppressHydrationWarning>
+                            <Label
+                              htmlFor={`rate-${service.id}`}
+                              suppressHydrationWarning
+                            >
+                              Select Rate Level
+                            </Label>
+                            <Select
+                              value={selectedOption || ""}
+                              onValueChange={handleOptionChange}
+                            >
+                              <SelectTrigger suppressHydrationWarning>
+                                <SelectValue placeholder="Choose rate level" />
+                              </SelectTrigger>
+                              <SelectContent suppressHydrationWarning>
+                                {rateOptions.map((option: ServiceOption) => (
+                                  <SelectItem
+                                    key={option.value}
+                                    value={option.value}
+                                    suppressHydrationWarning
+                                  >
+                                    {option.label} - ${option.rate}/hour
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+
+                        {/* Custom Rate Toggle */}
+                        {selectedOption && (
+                          <div
+                            className="flex items-center space-x-2"
+                            suppressHydrationWarning
+                          >
+                            <Checkbox
+                              id={`custom-rate-${service.id}`}
+                              checked={useCustomRate}
+                              onCheckedChange={handleCustomRateToggle}
+                              suppressHydrationWarning
+                            />
+                            <Label
+                              htmlFor={`custom-rate-${service.id}`}
+                              suppressHydrationWarning
+                              className="text-sm"
+                            >
+                              Use custom rate
+                            </Label>
+                          </div>
+                        )}
+
+                        {/* Dynamic Fields Container - Fixed Height */}
+                        <div className="min-h-[80px]" suppressHydrationWarning>
+                          {/* Custom Rate Input */}
+                          {selectedOption && useCustomRate && (
+                            <div className="space-y-2 mb-3" suppressHydrationWarning>
+                              <Label
+                                htmlFor={`custom-rate-input-${service.id}`}
                                 suppressHydrationWarning
                               >
-                                {option.label} - ${option.rate}/hour
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                                Custom Rate ($/hour)
+                              </Label>
+                              <Input
+                                id={`custom-rate-input-${service.id}`}
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                placeholder="0.00"
+                                value={customRate || ""}
+                                onChange={(e) =>
+                                  handleCustomRateChange(
+                                    parseFloat(e.target.value) || 0
+                                  )
+                                }
+                                suppressHydrationWarning
+                              />
+                            </div>
+                          )}
+
+                          {/* Quantity Input */}
+                          {selectedOption && (
+                            <div className="space-y-2" suppressHydrationWarning>
+                              <Label
+                                htmlFor={`quantity-${service.id}`}
+                                suppressHydrationWarning
+                              >
+                                Quantity (Hours)
+                              </Label>
+                              <Input
+                                id={`quantity-${service.id}`}
+                                type="number"
+                                min="0"
+                                step="0.5"
+                                placeholder="0"
+                                value={quantity || ""}
+                                onChange={(e) =>
+                                  handleQuantityChange(
+                                    parseFloat(e.target.value) || 0
+                                  )
+                                }
+                                suppressHydrationWarning
+                              />
+                            </div>
+                          )}
+                        </div>
                       </div>
 
-                      {/* Quantity Input */}
-                      {selectedOption && (
-                        <div className="space-y-2" suppressHydrationWarning>
-                          <Label
-                            htmlFor={`quantity-${service.id}`}
-                            suppressHydrationWarning
-                          >
-                            Quantity (Hours)
-                          </Label>
-                          <Input
-                            id={`quantity-${service.id}`}
-                            type="number"
-                            min="0"
-                            step="0.5"
-                            placeholder="0"
-                            value={quantity || ""}
-                            onChange={(e) =>
-                              handleQuantityChange(
-                                parseFloat(e.target.value) || 0
-                              )
-                            }
-                            suppressHydrationWarning
-                          />
-                        </div>
-                      )}
-
-                      {/* Cost Display for withOptions */}
-                      {selectedOption && quantity && quantity > 0 && (
-                        <div
-                          className="mt-1 p-2 bg-muted rounded-lg text-xs"
-                          suppressHydrationWarning
-                        >
+                      {/* Fixed Cost Display */}
+                      <div className="mt-auto" suppressHydrationWarning>
+                        {selectedOption && quantity && quantity > 0 ? (
                           <div
-                            className="flex justify-between mb-0.5"
+                            className="p-2 bg-muted rounded-lg border-l-4 border-primary overflow-hidden"
                             suppressHydrationWarning
                           >
-                            <span suppressHydrationWarning>Rate:</span>
-                            <span suppressHydrationWarning>
-                              ${getSelectedRate()}/hour
+                            <div className="flex justify-between items-center">
+                              <span className="font-semibold text-primary text-sm truncate">
+                                Total: ${getSelectedRate()} x {quantity} = ${getTotalCost().toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            className="p-2 bg-gray-50 rounded-lg border border-dashed border-gray-300 text-center"
+                            suppressHydrationWarning
+                          >
+                            <span className="text-muted-foreground text-xs">
+                              Select rate and quantity
                             </span>
                           </div>
-                          <div
-                            className="flex justify-between mb-0.5"
-                            suppressHydrationWarning
-                          >
-                            <span suppressHydrationWarning>Hours:</span>
-                            <span suppressHydrationWarning>{quantity}</span>
-                          </div>
-                          <div
-                            className="flex justify-between font-semibold border-t border-border pt-0.5"
-                            suppressHydrationWarning
-                          >
-                            <span suppressHydrationWarning>Total:</span>
-                            <span suppressHydrationWarning>
-                              ${getTotalCost().toFixed(2)}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                    </>
+                        )}
+                      </div>
+                    </div>
                   )}
 
                   {/* For fixedCost services */}
@@ -304,23 +378,36 @@ export default function ServiceCard({ service, sectionId }: ServiceCardProps) {
                         />
                       </div>
 
-                      {/* Cost Display for fixedCost */}
-                      {fixedValue && fixedValue > 0 && (
-                        <div
-                          className="mt-1 p-2 bg-muted rounded-lg text-xs"
-                          suppressHydrationWarning
-                        >
+                      {/* Cost Display for fixedCost - Compact */}
+                      <div className="mt-2" suppressHydrationWarning>
+                        {fixedValue && fixedValue > 0 ? (
                           <div
-                            className="flex justify-between font-semibold"
+                            className="p-2 bg-muted rounded-lg border-l-4 border-green-500 overflow-hidden"
                             suppressHydrationWarning
                           >
-                            <span suppressHydrationWarning>Fixed Cost:</span>
-                            <span suppressHydrationWarning>
-                              ${getTotalCost().toFixed(2)}
+                            <div
+                              className="flex justify-between items-center"
+                              suppressHydrationWarning
+                            >
+                              <span className="font-semibold text-green-700 text-sm truncate">
+                                Fixed Cost:
+                              </span>
+                              <span className="font-bold text-green-700 text-right text-sm">
+                                ${getTotalCost().toFixed(2)}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <div
+                            className="p-2 bg-gray-50 rounded-lg border border-dashed border-gray-300 text-center"
+                            suppressHydrationWarning
+                          >
+                            <span className="text-muted-foreground text-xs">
+                              Enter amount
                             </span>
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </>
                   )}
                 </CardContent>
