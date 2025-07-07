@@ -263,7 +263,7 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
     },
     {
       id: "fs_preparation",
-      name: "Annual FS Preparation",
+      name: "Annual Financial Statements Preparation",
       services: [
         {
           id: "annual-accounts-preparation",
@@ -672,7 +672,13 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
               ...section,
               services: section.services.map((service) =>
                 service.id === serviceId && service.type === "withOptions"
-                  ? { ...service, useCustomRate: !service.useCustomRate }
+                  ? {
+                      ...service,
+                      useCustomRate: !service.useCustomRate,
+                      customRate: !service.useCustomRate
+                        ? 0
+                        : service.customRate,
+                    }
                   : service
               ),
             }

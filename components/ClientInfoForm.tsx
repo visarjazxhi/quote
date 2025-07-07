@@ -32,7 +32,6 @@ const entityTypes = [
   "Trust",
   "Self-Managed Super Fund (SMSF)",
   "Not-for-Profit",
-  "Strata Corporation",
 ];
 
 export default function ClientInfoForm() {

@@ -99,8 +99,8 @@ export default function SummaryCard() {
     // Add initial header
     let yPosition = addHeader();
 
-    // Add date
-    yPosition = checkPageBreak(yPosition, 20);
+    // Add date at top right
+    yPosition = checkPageBreak(yPosition, 15);
     doc.setFontSize(10);
     doc.setTextColor(100);
     const currentDate = new Date().toLocaleDateString("en-AU", {
@@ -108,91 +108,74 @@ export default function SummaryCard() {
       month: "2-digit",
       year: "numeric",
     });
-    doc.text(`Date: ${currentDate}`, 140, yPosition);
-    yPosition += 15;
+    doc.text(`Date: ${currentDate}`, 190, yPosition, { align: "right" });
+    yPosition += 6;
 
-    // Add client information (To section)
-    if (clientInfo.clientGroup || clientInfo.entities.some((e) => e.name)) {
-      yPosition = checkPageBreak(yPosition, 50);
+    // Add centered "Quotation" title - bigger font
+    yPosition = checkPageBreak(yPosition, 20);
+    doc.setFontSize(18);
+    doc.setTextColor(0);
+    doc.setFont("helvetica", "bold");
+    doc.text("Quotation", 105, yPosition, { align: "center" });
+    doc.setFont("helvetica", "normal");
+    yPosition += 10;
+
+    // Add client group name if available
+    if (clientInfo.clientGroup) {
+      yPosition = checkPageBreak(yPosition, 15);
       doc.setFontSize(12);
       doc.setTextColor(0);
-      doc.text("To:", 20, yPosition);
-      yPosition += 8;
-
-      if (clientInfo.clientGroup) {
-        doc.setFontSize(11);
-        doc.setTextColor(0);
-        doc.text(`${clientInfo.clientGroup}`, 20, yPosition);
-        yPosition += 6;
-      }
-
-      if (clientInfo.address) {
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text(`${clientInfo.address}`, 20, yPosition);
-        yPosition += 8;
-      }
-
-      // Add entity details with full information
-      const entitiesWithData = clientInfo.entities.filter(
-        (entity) => entity.name
-      );
-
-      if (entitiesWithData.length > 0) {
-        doc.setFontSize(10);
-        doc.setTextColor(100);
-        doc.text("Entities:", 20, yPosition);
-        yPosition += 6;
-
-        entitiesWithData.forEach((entity) => {
-          // Entity name and type
-          doc.setFontSize(9);
-          doc.setTextColor(0);
-          const entityLine1 = `• ${entity.name}${
-            entity.entityType ? ` (${entity.entityType})` : ""
-          }`;
-          doc.text(entityLine1, 25, yPosition);
-          yPosition += 5;
-
-          // Business industry and Xero status
-          const details = [];
-          if (entity.businessType) {
-            details.push(`Industry: ${entity.businessType}`);
-          }
-          details.push(`Xero: ${entity.hasXeroFile ? "Yes" : "No"}`);
-          if (!entity.hasXeroFile && entity.accountingSoftware) {
-            details.push(`Current software: ${entity.accountingSoftware}`);
-          }
-
-          if (details.length > 0) {
-            doc.setFontSize(8);
-            doc.setTextColor(100);
-            doc.text(`  ${details.join(" | ")}`, 25, yPosition);
-            yPosition += 5;
-          }
-
-          yPosition += 2; // Small gap between entities
-        });
-
-        yPosition += 6; // Space after entities section
-      }
-
-      yPosition += 10; // Add space before letter content
+      doc.setFont("helvetica", "bold");
+      doc.text(`${clientInfo.clientGroup}`, 20, yPosition);
+      doc.setFont("helvetica", "normal");
+      yPosition += 15;
     }
 
-    // Add professional letter opening
-    doc.setFontSize(14);
-    doc.setTextColor(0);
-    doc.text("Quotation", 20, yPosition);
-    yPosition += 15;
+    // Add "To the Directors of:" section with entities (underlined)
+    const entitiesWithData = clientInfo.entities.filter(
+      (entity) => entity.name
+    );
+    if (entitiesWithData.length > 0) {
+      yPosition = checkPageBreak(yPosition, 30);
+      doc.setFontSize(11);
+      doc.setTextColor(0);
+      doc.text("To the Directors of:", 20, yPosition);
+      // Add underline
+      const textWidth = doc.getTextWidth("To the Directors of:");
+      doc.line(20, yPosition + 1, 20 + textWidth, yPosition + 1);
+      yPosition += 5;
 
-    doc.setFontSize(11);
-    doc.setTextColor(0);
-    const greeting = clientInfo.contactPerson
-      ? `Dear ${clientInfo.contactPerson},`
-      : "Dear Valued Client,";
-    doc.text(greeting, 20, yPosition);
-    yPosition += 10;
+      entitiesWithData.forEach((entity) => {
+        doc.setFontSize(10);
+        doc.setTextColor(0);
+        doc.text(`${entity.name}`, 20, yPosition);
+        yPosition += 6;
+      });
+      yPosition += 6;
+    }
+
+    // Add Attention section (underlined)
+    if (clientInfo.contactPerson) {
+      yPosition = checkPageBreak(yPosition, 20);
+      doc.setFontSize(11);
+      doc.setTextColor(0);
+      doc.text("Attention:", 20, yPosition);
+      // Add underline
+      const attentionWidth = doc.getTextWidth("Attention:");
+      doc.line(20, yPosition + 1, 20 + attentionWidth, yPosition + 1);
+      yPosition += 6;
+      doc.text(`${clientInfo.contactPerson}`, 20, yPosition);
+      yPosition += 6;
+    }
+
+    // Add address if available
+    if (clientInfo.address) {
+      yPosition = checkPageBreak(yPosition, 10);
+      doc.setFontSize(10);
+      doc.setTextColor(0);
+      doc.text(`${clientInfo.address}`, 20, yPosition);
+      yPosition += 15;
+    }
 
     // Add introduction paragraph
     doc.setFontSize(10);
@@ -218,9 +201,9 @@ export default function SummaryCard() {
       doc.setFontSize(9);
       doc.setTextColor(100);
       doc.text("Service Description", 20, yPosition);
-      doc.text("Hours", 120, yPosition, { align: "center" });
-      doc.text("Rate", 145, yPosition, { align: "center" });
-      doc.text("Amount", 175, yPosition, { align: "right" });
+      doc.text("Hours", 130, yPosition, { align: "center" });
+      doc.text("Rate", 155, yPosition, { align: "center" });
+      doc.text("Amount", 190, yPosition, { align: "right" });
       yPosition += 5;
 
       // Add a line under headers
@@ -234,7 +217,9 @@ export default function SummaryCard() {
         yPosition = checkPageBreak(yPosition, 20);
         doc.setFontSize(10);
         doc.setTextColor(50);
+        doc.setFont("helvetica", "bold");
         doc.text(`${section.name.toUpperCase()}`, 20, yPosition);
+        doc.setFont("helvetica", "normal"); // Reset to normal font
         yPosition += 8;
 
         // Services in this section
@@ -250,7 +235,13 @@ export default function SummaryCard() {
             );
             if (!selectedOption) return;
 
-            const totalAmount = selectedOption.rate * service.quantity;
+            // Use custom rate if enabled, otherwise use selected option rate
+            const rate =
+              service.useCustomRate && service.customRate !== undefined
+                ? service.customRate
+                : selectedOption.rate;
+
+            const totalAmount = rate * service.quantity;
 
             // Find the original service definition to get description
             const originalService = sections
@@ -271,16 +262,16 @@ export default function SummaryCard() {
 
             // Hours, Rate, Investment on the same line as service name
             doc.setTextColor(100);
-            doc.text(`${service.quantity}`, 120, yPosition, {
+            doc.text(`${service.quantity}`, 130, yPosition, {
               align: "center",
             });
 
-            doc.text(`$${selectedOption.rate.toFixed(0)}`, 145, yPosition, {
+            doc.text(`$${rate.toFixed(0)}`, 155, yPosition, {
               align: "center",
             });
 
             doc.setTextColor(0);
-            doc.text(`$${totalAmount.toFixed(2)}`, 175, yPosition, {
+            doc.text(`$${totalAmount.toFixed(2)}`, 190, yPosition, {
               align: "right",
             });
 
@@ -319,7 +310,7 @@ export default function SummaryCard() {
             doc.text(serviceName, 25, yPosition);
 
             // Investment
-            doc.text(`$${service.value.toFixed(2)}`, 175, yPosition, {
+            doc.text(`$${service.value.toFixed(2)}`, 190, yPosition, {
               align: "right",
             });
 
@@ -354,7 +345,7 @@ export default function SummaryCard() {
         doc.setTextColor(100);
         doc.text(discount.description || "Special Discount", 25, yPosition);
         doc.setTextColor(0);
-        doc.text(`-$${discount.amount.toFixed(2)}`, 175, yPosition, {
+        doc.text(`-$${discount.amount.toFixed(2)}`, 190, yPosition, {
           align: "right",
         });
         yPosition += 8;
@@ -369,9 +360,9 @@ export default function SummaryCard() {
 
       doc.setFontSize(12);
       doc.setTextColor(0);
-      doc.text("TOTAL:", 120, yPosition);
+      doc.text("TOTAL:", 130, yPosition);
       doc.setFontSize(14);
-      doc.text(`$${(total || 0).toFixed(2)}`, 175, yPosition, {
+      doc.text(`$${(total || 0).toFixed(2)}`, 190, yPosition, {
         align: "right",
       });
       yPosition += 15;
@@ -391,6 +382,8 @@ export default function SummaryCard() {
     doc.setFontSize(11);
     doc.setTextColor(0);
     doc.text("Yours sincerely,", 20, yPosition);
+    yPosition += 6
+    doc.text("Domenic Barba", 20, yPosition);
     yPosition += 20;
 
     doc.text("Integritas Accountants and Advisers", 20, yPosition);
@@ -431,7 +424,13 @@ export default function SummaryCard() {
             (opt) => opt.value === service.selectedOption
           );
           if (selectedOption) {
-            const totalAmount = selectedOption.rate * service.quantity;
+            // Use custom rate if enabled, otherwise use selected option rate
+            const rate =
+              service.useCustomRate && service.customRate !== undefined
+                ? service.customRate
+                : selectedOption.rate;
+
+            const totalAmount = rate * service.quantity;
             servicesHtml += `
               <tr>
                 <td style="padding: 6px; border-bottom: 1px solid #eee;">${
@@ -827,21 +826,30 @@ export default function SummaryCard() {
                               (opt) => opt.value === service.selectedOption
                             );
                             if (!selectedOption) return null;
+
+                            // Use custom rate if enabled, otherwise use selected option rate
+                            const rate =
+                              service.useCustomRate &&
+                              service.customRate !== undefined
+                                ? service.customRate
+                                : selectedOption.rate;
+
+                            const totalAmount = rate * service.quantity;
+
                             return (
                               <li key={service.id} className="flex flex-col">
                                 <div className="flex justify-between">
                                   <span>
-                                    {service.name} ({selectedOption.label})
+                                    {service.name} (
+                                    {service.useCustomRate
+                                      ? "Custom Rate"
+                                      : selectedOption.label}
+                                    )
                                   </span>
-                                  <span>
-                                    $
-                                    {(
-                                      selectedOption.rate * service.quantity
-                                    ).toFixed(2)}
-                                  </span>
+                                  <span>${totalAmount.toFixed(2)}</span>
                                 </div>
                                 <div className="text-sm text-gray-500 pl-4">
-                                  Rate: ${selectedOption.rate}/unit, Quantity:{" "}
+                                  Rate: ${rate}/unit, Quantity:{" "}
                                   {service.quantity}
                                 </div>
                               </li>
