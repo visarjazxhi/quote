@@ -86,6 +86,7 @@ interface EstimationStore {
   sections: ServiceSection[];
   clientInfo: ClientInfo;
   discount: Discount;
+  feesCharged: number;
   toggleService: (sectionId: string, serviceId: string) => void;
   updateOption: (sectionId: string, serviceId: string, option: string) => void;
   updateQuantity: (
@@ -116,6 +117,7 @@ interface EstimationStore {
   ) => void;
 
   updateDiscount: (field: keyof Discount, value: string | number) => void;
+  updateFeesCharged: (amount: number) => void;
   totalCost: () => number;
   addSection: (name: string) => void;
   getServiceOptions: (sectionId: string, serviceId: string) => ServiceOption[];
@@ -141,6 +143,7 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
     description: "",
     amount: 0,
   },
+  feesCharged: 0,
   sections: [
     {
       id: "admin",
@@ -700,6 +703,11 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             }
           : section
       ),
+    })),
+
+  updateFeesCharged: (amount) =>
+    set(() => ({
+      feesCharged: amount,
     })),
 
   totalCost: () => {

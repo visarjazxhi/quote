@@ -32,8 +32,15 @@ const getValidSections = (sections: ServiceSection[]) => {
 };
 
 export default function SummaryCard() {
-  const { sections, clientInfo, discount, totalCost, getServiceOptions } =
-    useEstimationStore();
+  const {
+    sections,
+    clientInfo,
+    discount,
+    feesCharged,
+    totalCost,
+    getServiceOptions,
+    updateFeesCharged,
+  } = useEstimationStore();
   const [emails, setEmails] = useState<string>("");
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -352,7 +359,7 @@ export default function SummaryCard() {
       }
 
       // Total section
-      yPosition = checkPageBreak(yPosition, 30);
+      yPosition = checkPageBreak(yPosition, 50);
       yPosition += 5;
       doc.setDrawColor(0);
       doc.line(120, yPosition, 190, yPosition);
@@ -360,12 +367,24 @@ export default function SummaryCard() {
 
       doc.setFontSize(12);
       doc.setTextColor(0);
-      doc.text("TOTAL:", 130, yPosition);
+      doc.text("Total Value of Service:", 100, yPosition);
       doc.setFontSize(14);
       doc.text(`$${(total || 0).toFixed(2)}`, 190, yPosition, {
         align: "right",
       });
-      yPosition += 15;
+      yPosition += 6;
+
+      // Add fees charged section if there's a value
+      if (feesCharged > 0) {
+        doc.setFontSize(12);
+        doc.setTextColor(0);
+        doc.text("Fees Charged for this service:", 100, yPosition);
+        doc.setFontSize(14);
+        doc.text(`$${feesCharged.toFixed(2)}`, 190, yPosition, {
+          align: "right",
+        });
+        yPosition += 15;
+      }
     }
 
     // Add closing paragraph
@@ -382,7 +401,7 @@ export default function SummaryCard() {
     doc.setFontSize(11);
     doc.setTextColor(0);
     doc.text("Yours sincerely,", 20, yPosition);
-    yPosition += 6
+    yPosition += 6;
     doc.text("Domenic Barba", 20, yPosition);
     yPosition += 20;
 
@@ -552,11 +571,23 @@ export default function SummaryCard() {
                   : ""
               }
               <tr style="background-color: #f8f9fa; font-weight: bold; font-size: 16px;">
-                <td colspan="2" style="padding: 12px; border-top: 2px solid #2c5282;">TOTAL:</td>
+                <td colspan="2" style="padding: 12px; border-top: 2px solid #2c5282;">TOTAL VALUE:</td>
                 <td style="padding: 12px; text-align: right; border-top: 2px solid #2c5282; color: #2c5282;">$${(
                   total || 0
                 ).toFixed(2)}</td>
               </tr>
+              ${
+                feesCharged > 0
+                  ? `
+              <tr style="background-color: #e6f3ff; font-weight: bold; font-size: 16px;">
+                <td colspan="2" style="padding: 12px; border-top: 1px solid #2c5282;">FEES CHARGED:</td>
+                <td style="padding: 12px; text-align: right; border-top: 1px solid #2c5282; color: #2c5282;">$${feesCharged.toFixed(
+                  2
+                )}</td>
+              </tr>
+              `
+                  : ""
+              }
             </tbody>
           </table>
           
@@ -887,38 +918,69 @@ export default function SummaryCard() {
                   </div>
                 )}
               </CardContent>
-              <CardFooter className="flex-col space-y-2">
+              <CardFooter className="flex-col space-y-3">
                 <div className="flex justify-between w-full text-lg font-semibold">
-                  <span>Total Estimate</span>
+                  <span>Total Value</span>
                   <span>${(total || 0).toFixed(2)}</span>
                 </div>
-                {mounted && (
-                  <Input
-                    type="text"
-                    placeholder="Enter multiple emails (comma separated)"
-                    value={emails}
-                    onChange={(e) => setEmails(e.target.value)}
-                    suppressHydrationWarning
-                  />
-                )}
+
+                {/* Fees Charged Section */}
+                <div className="w-full flex items-center space-x-3">
+                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                    Fees Charged
+                  </label>
+                  {mounted && (
+                    <Input
+                      type="number"
+                      placeholder=""
+                      value={feesCharged || ""}
+                      onChange={(e) =>
+                        updateFeesCharged(Number(e.target.value) || 0)
+                      }
+                      suppressHydrationWarning
+                      className="flex-1"
+                    />
+                  )}
+                </div>
+
+                {/* Divider */}
+                <div className="w-full border-t border-gray-200 my-2"></div>
+
+                {/* Download PDF Button */}
                 <Button onClick={handleDownloadPDF} className="w-full">
                   Download PDF
                 </Button>
-                <Button
-                  onClick={handleEmailEstimate}
-                  variant="outline"
-                  className="w-full"
-                  disabled={isGeneratingEmail}
-                >
-                  {isGeneratingEmail ? (
-                    <>
-                      <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
-                      Sending Email...
-                    </>
-                  ) : (
-                    "Email Estimate"
+
+                {/* Extra Space */}
+                <div className="py-2"></div>
+
+                {/* Email Section */}
+                <div className="w-full space-y-2">
+                  {mounted && (
+                    <Input
+                      type="text"
+                      placeholder="Enter multiple emails (comma separated)"
+                      value={emails}
+                      onChange={(e) => setEmails(e.target.value)}
+                      suppressHydrationWarning
+                    />
                   )}
-                </Button>
+                  <Button
+                    onClick={handleEmailEstimate}
+                    variant="outline"
+                    className="w-full"
+                    disabled={isGeneratingEmail}
+                  >
+                    {isGeneratingEmail ? (
+                      <>
+                        <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                        Sending Email...
+                      </>
+                    ) : (
+                      "Email Estimate"
+                    )}
+                  </Button>
+                </div>
               </CardFooter>
             </Card>
           </motion.div>
