@@ -11,7 +11,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "./ui/alert-dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import {
   ChevronLeft,
   Download,
@@ -87,16 +86,19 @@ export const QuoteList = React.forwardRef<
 
     const fetchQuotes = async () => {
       try {
+        console.log("fetchQuotes called - fetching quotes from API...");
         setLoading(true);
         const response = await fetch("/api/quotes");
         if (!response.ok) {
           throw new Error("Failed to fetch quotes");
         }
         const data = await response.json();
+        console.log("fetchQuotes - received data:", data.length, "quotes");
         setQuotes(data);
         setFilteredQuotes(data);
         setError(null);
       } catch (err) {
+        console.error("fetchQuotes error:", err);
         setError(err instanceof Error ? err.message : "An error occurred");
       } finally {
         setLoading(false);
@@ -309,104 +311,133 @@ export const QuoteList = React.forwardRef<
             </div>
           ) : (
             filteredQuotes.map((quote) => (
-              <Card
+              <div
                 key={quote.id}
-                className={`cursor-pointer transition-all hover:shadow-md ${
-                  selectedQuoteId === quote.id ? "ring-2 ring-blue-500" : ""
+                className={`bg-white rounded-lg border transition-all hover:shadow-md cursor-pointer ${
+                  selectedQuoteId === quote.id
+                    ? "ring-2 ring-blue-500 border-blue-200"
+                    : "border-gray-200 hover:border-gray-300"
                 } ${isSelecting ? "opacity-50 pointer-events-none" : ""}`}
                 onClick={() => handleQuoteSelect(quote)}
               >
-                <CardHeader className="pb-2">
-                  <div className="flex items-start justify-between">
-                    <CardTitle className="text-sm font-medium line-clamp-1">
+                <div className="p-4">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-3">
+                    <h3 className="font-semibold text-sm text-gray-900 line-clamp-1">
                       {quote.clientGroup || "Unnamed Quote"}
-                    </CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="space-y-2">
-                    <p className="text-xs text-gray-600">
+                    </h3>
+                    <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
                       {formatDate(quote.updatedAt)}
-                    </p>
+                    </span>
+                  </div>
 
-                    {quote.contactPerson && (
-                      <p className="text-xs text-gray-600 line-clamp-1">
-                        Contact: {quote.contactPerson}
+                  {/* Contact Person */}
+                  {quote.contactPerson && (
+                    <p className="text-xs text-gray-600 mb-2 line-clamp-1">
+                      <span className="font-medium">Contact:</span>{" "}
+                      {quote.contactPerson}
+                    </p>
+                  )}
+
+                  {/* Entity Names */}
+                  {quote.entities.length > 0 && (
+                    <div className="mb-3">
+                      <p className="text-xs text-gray-500 mb-1">
+                        {quote.entities.length}{" "}
+                        {quote.entities.length === 1 ? "Entity" : "Entities"}:
                       </p>
-                    )}
-
-                    <p className="text-xs text-gray-600">
-                      {quote.entities.length}{" "}
-                      {quote.entities.length === 1 ? "entity" : "entities"} •{" "}
-                      {quote.services.length} services
-                    </p>
-
-                    <div className="flex items-center justify-between pt-2">
-                      <div className="flex space-x-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleQuoteSelect(quote);
-                          }}
-                          title="View/Edit"
-                          disabled={isSelecting}
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
-                              onClick={(e) => e.stopPropagation()}
-                              title="Delete"
-                              disabled={isSelecting}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Quote</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete this quote? This
-                                action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDeleteQuote(quote.id)}
-                                className="bg-red-600 hover:bg-red-700"
-                              >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-
-                      <div className="flex space-x-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:bg-blue-50"
-                          onClick={(e) => handleDownloadPDF(quote, e)}
-                          title="Download PDF"
-                          disabled={isSelecting}
-                        >
-                          <Download className="h-4 w-4 text-blue-600" />
-                        </Button>
+                      <div className="space-y-1">
+                        {quote.entities.slice(0, 2).map((entity) => (
+                          <p
+                            key={entity.id}
+                            className="text-xs text-gray-700 line-clamp-1 pl-2"
+                          >
+                            • {entity.name}
+                          </p>
+                        ))}
+                        {quote.entities.length > 2 && (
+                          <p className="text-xs text-gray-500 pl-2">
+                            +{quote.entities.length - 2} more
+                          </p>
+                        )}
                       </div>
                     </div>
+                  )}
+
+                  {/* Services Count */}
+                  <div className="mb-3">
+                    <p className="text-xs text-gray-500">
+                      <span className="font-medium">
+                        {quote.services.length}
+                      </span>{" "}
+                      services selected
+                    </p>
                   </div>
-                </CardContent>
-              </Card>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                    <div className="flex space-x-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 hover:bg-blue-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleQuoteSelect(quote);
+                        }}
+                        title="View/Edit"
+                        disabled={isSelecting}
+                      >
+                        <Eye className="h-3 w-3 text-blue-600" />
+                      </Button>
+
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 hover:bg-red-50"
+                            onClick={(e) => e.stopPropagation()}
+                            title="Delete"
+                            disabled={isSelecting}
+                          >
+                            <Trash2 className="h-3 w-3 text-red-600" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Quote</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete this quote? This
+                              action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteQuote(quote.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 hover:bg-green-50"
+                      onClick={(e) => handleDownloadPDF(quote, e)}
+                      title="Download PDF"
+                      disabled={isSelecting}
+                    >
+                      <Download className="h-3 w-3 text-green-600" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
             ))
           )}
         </div>

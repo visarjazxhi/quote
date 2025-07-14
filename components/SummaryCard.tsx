@@ -1,13 +1,13 @@
 "use client";
 
+import { ChevronRight, Download, Mail, Plus, Save, Trash2 } from "lucide-react";
 import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
-import { ChevronRight, Save } from "lucide-react";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
 import { ServiceSection, useEstimationStore } from "@/lib/store";
 import { useCallback, useEffect, useState } from "react";
 
@@ -61,6 +61,9 @@ export default function SummaryCard({
     updateFeesCharged,
   } = useEstimationStore();
   const [emails, setEmails] = useState<string>("");
+  const [emailList, setEmailList] = useState<string[]>([]);
+  const [newEmail, setNewEmail] = useState("");
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isGeneratingEmail, setIsGeneratingEmail] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -69,16 +72,117 @@ export default function SummaryCard({
     setMounted(true);
   }, []);
 
+  // Initialize email list from comma-separated emails
+  useEffect(() => {
+    if (emails) {
+      const emailArray = emails
+        .split(",")
+        .map((email) => email.trim())
+        .filter((email) => email);
+      setEmailList(emailArray);
+    } else {
+      setEmailList([]);
+    }
+  }, [emails]);
+
   // Get total with fallback to prevent undefined errors
   const total = mounted ? totalCost() : 0;
+
+  const addEmail = () => {
+    if (newEmail.trim()) {
+      const trimmedEmail = newEmail.trim().toLowerCase();
+      // Basic email validation
+      if (!trimmedEmail.includes("@") || !trimmedEmail.includes(".")) {
+        toast.error("Please enter a valid email address");
+        return;
+      }
+      if (!emailList.includes(trimmedEmail)) {
+        const updatedList = [...emailList, trimmedEmail];
+        setEmailList(updatedList);
+        setEmails(updatedList.join(", "));
+        setNewEmail("");
+      } else {
+        toast.error("Email address already added");
+        setNewEmail("");
+      }
+    }
+  };
+
+  const removeEmail = (indexToRemove: number) => {
+    const updatedList = emailList.filter((_, index) => index !== indexToRemove);
+    setEmailList(updatedList);
+    setEmails(updatedList.join(", "));
+  };
+
+  const handleEmailModalSend = async () => {
+    if (emailList.length === 0) {
+      toast.error("Please add at least one email address");
+      return;
+    }
+
+    // Update the main emails state and trigger send
+    setEmails(emailList.join(", "));
+    setIsEmailModalOpen(false);
+
+    // Call the email function directly with the email list
+    await handleEmailEstimate(emailList);
+  };
 
   const handleSaveQuote = async () => {
     try {
       setIsSaving(true);
       const quoteId = await saveQuoteToDatabase(currentQuoteId);
 
+      // Small delay to ensure database operation is complete
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
+      console.log("Quote saved with ID:", quoteId);
+      console.log("Calling onQuoteSaved callback:", !!onQuoteSaved);
+
       if (onQuoteSaved) {
-        onQuoteSaved(quoteId);
+        await onQuoteSaved(quoteId);
+      }
+
+      // Clear form after successful save for new quote
+      if (!currentQuoteId) {
+        // Reset all form data
+        const store = useEstimationStore.getState();
+
+        // Reset all sections
+        store.sections.forEach((section) => {
+          section.services.forEach((service) => {
+            if (service.type === "withOptions") {
+              service.selectedOption = undefined;
+              service.quantity = undefined;
+              service.useCustomRate = false;
+              service.customRate = undefined;
+            } else if (service.type === "fixedCost") {
+              service.value = undefined;
+            } else if (service.type === "manualInput") {
+              service.customDescription = undefined;
+              service.customAmount = undefined;
+              service.customRate = undefined;
+            } else if (service.type === "rnD") {
+              service.rdExpenses = undefined;
+            }
+          });
+        });
+
+        // Reset client info
+        store.updateClientGroup("");
+        store.updateClientAddress("");
+        store.updateContactPerson("");
+
+        // Clear all entities
+        const currentEntities = [...store.clientInfo.entities];
+        currentEntities.forEach((entity) => {
+          store.removeEntity(entity.id);
+        });
+
+        // Reset discount and fees
+        store.updateDiscount("description", "");
+        store.updateDiscount("amount", 0);
+        store.updateFeesCharged(0);
       }
 
       toast.success(
@@ -547,14 +651,7 @@ export default function SummaryCard({
     doc.text("Professional Accounting Services", 20, yPosition);
 
     return doc;
-  }, [
-    sections,
-    clientInfo,
-    getServiceOptions,
-    discount,
-    feesCharged,
-    total,
-  ]);
+  }, [sections, clientInfo, getServiceOptions, discount, feesCharged, total]);
 
   const handleDownloadPDF = useCallback(async () => {
     const doc = generatePDFContent();
@@ -974,15 +1071,36 @@ export default function SummaryCard({
     `;
   };
 
-  const handleEmailEstimate = async () => {
-    // Clean and validate emails
-    const emailList = emails
-      .split(",")
-      .map((email) => email.trim().toLowerCase())
-      .filter((email) => email !== "" && email.includes("@"));
+  const handleEmailEstimate = async (emailsToSend?: string[]) => {
+    // Use provided emails or fall back to parsing the emails string
+    let emailList: string[];
+
+    if (emailsToSend) {
+      // Clean provided emails array
+      emailList = emailsToSend
+        .map((email) => email.trim().toLowerCase())
+        .filter(
+          (email) => email !== "" && email.includes("@") && email.includes(".")
+        );
+    } else {
+      // Parse and clean comma-separated emails string
+      emailList = emails
+        .split(",")
+        .map((email) => email.trim().toLowerCase())
+        .filter(
+          (email) => email !== "" && email.includes("@") && email.includes(".")
+        );
+    }
+
+    console.log("📧 Email processing:", {
+      provided: emailsToSend,
+      fallback: emails,
+      final: emailList,
+      count: emailList.length,
+    });
 
     if (emailList.length === 0) {
-      toast.error("Please enter at least one valid email address.");
+      toast.error("Please add at least one valid email address");
       return;
     }
 
@@ -1127,197 +1245,61 @@ export default function SummaryCard({
         </div>
       }
     >
-      <div className="h-full overflow-y-auto p-2" suppressHydrationWarning>
-        <Card className="h-full" suppressHydrationWarning>
-          <CardHeader suppressHydrationWarning>
-            <div className="flex items-center justify-between">
-              <CardTitle suppressHydrationWarning>Estimate Summary</CardTitle>
-              {onToggleVisibility && (
-                <Button
-                  onClick={onToggleVisibility}
-                  variant="ghost"
-                  size="sm"
-                  title="Hide summary sidebar"
-                  className="hover:bg-gray-100"
-                >
-                  <ChevronRight className="h-5 w-5" />
-                </Button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent
-            className="space-y-2 overflow-y-auto"
-            suppressHydrationWarning
-          >
-            {/* Client Information */}
-            {(clientInfo.clientGroup ||
-              clientInfo.entities.some((e) => e.name)) && (
-              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                <h3 className="font-semibold text-sm mb-2">
-                  Client Information
-                </h3>
-                {clientInfo.clientGroup && (
-                  <p className="text-xs mb-1">
-                    <strong>Group:</strong> {clientInfo.clientGroup}
-                  </p>
-                )}
-                {clientInfo.entities.map(
-                  (entity, index) =>
-                    entity.name && (
-                      <div key={entity.id} className="text-xs mb-3">
-                        <p className="mb-1">
-                          <strong>Entity {index + 1}:</strong>
-                        </p>
-                        <p className="ml-2 mb-1">
-                          {[entity.name, entity.entityType, entity.businessType]
-                            .filter(Boolean)
-                            .join(" | ")}
-                        </p>
-                        <p className="ml-2">
-                          Xero subscription: {entity.hasXeroFile ? "Yes" : "No"}
-                          {!entity.hasXeroFile &&
-                            entity.accountingSoftware &&
-                            ` | Current software: ${entity.accountingSoftware}`}
-                        </p>
-                      </div>
-                    )
-                )}
-              </div>
+      <div className="h-full flex flex-col bg-white" suppressHydrationWarning>
+        {/* SECTION 1: Header with Title and Toggle */}
+        <div className="flex-shrink-0 p-3 border-b bg-white">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-semibold">Estimate Summary</h2>
+            {onToggleVisibility && (
+              <Button
+                onClick={onToggleVisibility}
+                variant="ghost"
+                size="sm"
+                title="Hide summary sidebar"
+                className="hover:bg-gray-100"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
             )}
+          </div>
+        </div>
 
-            <ul className="space-y-2">
-              {getValidSections(sections).map((section) => (
-                <li key={section.id}>
-                  <h3 className="font-semibold">{section.name}</h3>
-                  <ul className="pl-4">
-                    {section.services.map((service) => {
-                      if (
-                        service.type === "withOptions" &&
-                        service.selectedOption &&
-                        service.quantity
-                      ) {
-                        const serviceOptions = getServiceOptions(
-                          section.id,
-                          service.id
-                        );
-                        const selectedOption = serviceOptions.find(
-                          (opt) => opt.value === service.selectedOption
-                        );
-                        if (!selectedOption) return null;
-
-                        // Use custom rate if enabled, otherwise use selected option rate
-                        const rate =
-                          service.useCustomRate &&
-                          service.customRate !== undefined
-                            ? service.customRate
-                            : selectedOption.rate;
-
-                        const totalAmount = rate * service.quantity;
-
-                        return (
-                          <li key={service.id} className="flex flex-col">
-                            <div className="flex justify-between">
-                              <span>
-                                {service.name} (
-                                {service.useCustomRate
-                                  ? "Custom Rate"
-                                  : selectedOption.label}
-                                )
-                              </span>
-                              <span>${totalAmount.toFixed(2)}</span>
-                            </div>
-                            <div className="text-sm text-gray-500 pl-4">
-                              Rate: ${rate}/unit, Quantity: {service.quantity}
-                            </div>
-                          </li>
-                        );
-                      } else if (
-                        service.type === "fixedCost" &&
-                        service.value !== undefined
-                      ) {
-                        return (
-                          <li key={service.id} className="flex flex-col">
-                            <div className="flex justify-between">
-                              <span>{service.name}</span>
-                              <span>${service.value.toFixed(2)}</span>
-                            </div>
-                          </li>
-                        );
-                      } else if (
-                        service.type === "manualInput" &&
-                        service.customDescription &&
-                        service.customAmount !== undefined &&
-                        service.customRate !== undefined
-                      ) {
-                        const totalAmount =
-                          service.customAmount * service.customRate;
-                        return (
-                          <li key={service.id} className="flex flex-col">
-                            <div className="flex justify-between">
-                              <span>{service.name}</span>
-                              <span>${totalAmount.toFixed(2)}</span>
-                            </div>
-                            <div className="text-sm text-gray-500 pl-4">
-                              {service.customDescription} - Rate: $
-                              {service.customRate.toFixed(0)}/unit, Amount:{" "}
-                              {service.customAmount}
-                            </div>
-                          </li>
-                        );
-                      }
-                      return null;
-                    })}
-                  </ul>
-                </li>
-              ))}
-            </ul>
-
-            {/* Discount */}
-            {discount.amount > 0 && (
-              <div className="mt-4">
-                <h3 className="font-semibold mb-2">Discount</h3>
-                <div className="flex justify-between text-sm text-orange-600">
-                  <span className="truncate pr-2">
-                    {discount.description || "Discount Applied"}
-                  </span>
-                  <span>-${discount.amount.toFixed(2)}</span>
-                </div>
+        {/* SECTION 2: Total Value at Top */}
+        <div className="flex-shrink-0 bg-blue-50 border-b">
+          {/* Discount Row */}
+          {discount.amount > 0 && (
+            <div className="px-3 py-2 bg-red-50 border-b border-red-100">
+              <div className="flex justify-between items-center">
+                <span className="text-sm font-medium text-red-700">
+                  {discount.description || "Discount Applied"}
+                </span>
+                <span className="text-sm font-semibold text-red-700">
+                  -${discount.amount.toFixed(2)}
+                </span>
               </div>
-            )}
-          </CardContent>
-          <CardFooter className="flex-col space-y-3">
-            <div className="flex justify-between w-full text-lg font-semibold">
-              <span>Total Value</span>
-              <span>${(total || 0).toFixed(2)}</span>
             </div>
+          )}
 
-            {/* Fees Charged Section */}
-            <div className="w-full flex items-center space-x-3">
-              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                Fees Charged
-              </label>
-              {mounted && (
-                <Input
-                  type="number"
-                  placeholder=""
-                  value={feesCharged || ""}
-                  onChange={(e) =>
-                    updateFeesCharged(Number(e.target.value) || 0)
-                  }
-                  suppressHydrationWarning
-                  className="flex-1"
-                />
-              )}
+          {/* Total Row */}
+          <div className="px-3 py-4">
+            <div className="flex justify-between items-center">
+              <span className="text-xl font-semibold text-blue-900">
+                Total Value
+              </span>
+              <span className="text-xl font-bold text-blue-900">
+                ${(total || 0).toFixed(2)}
+              </span>
             </div>
+          </div>
+        </div>
 
-            {/* Divider */}
-            <div className="w-full border-t border-gray-200 my-2"></div>
-
-            {/* Save Quote Button */}
+        {/* SECTION 3: Action Buttons */}
+        <div className="flex-shrink-0 p-3 border-b bg-gray-50">
+          <div className="flex justify-center space-x-3">
+            {/* Save Button - Full button with text */}
             <Button
               onClick={handleSaveQuote}
-              variant="success"
-              className="w-full mb-2"
+              className="bg-green-600 hover:bg-green-700 text-white"
               disabled={isSaving}
             >
               {isSaving ? (
@@ -1333,43 +1315,325 @@ export default function SummaryCard({
               )}
             </Button>
 
-            {/* Download PDF Button */}
-            <Button onClick={handleDownloadPDF} className="w-full">
-              Download PDF
+            {/* Download PDF Button - Icon only */}
+            <Button
+              onClick={handleDownloadPDF}
+              variant="outline"
+              size="sm"
+              className="px-3"
+              title="Download PDF"
+            >
+              <Download className="h-4 w-4" />
             </Button>
 
-            {/* Extra Space */}
-            <div className="py-2"></div>
+            {/* Email Button with Modal - Icon only */}
+            <Dialog open={isEmailModalOpen} onOpenChange={setIsEmailModalOpen}>
+              <DialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="px-3"
+                  title="Email Estimate"
+                >
+                  <Mail className="h-4 w-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Email Estimate</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-4">
+                  {/* Add Email Input */}
+                  <div className="flex space-x-2">
+                    <Input
+                      type="email"
+                      placeholder="Enter email address"
+                      value={newEmail}
+                      onChange={(e) => setNewEmail(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          addEmail();
+                        }
+                      }}
+                      className="flex-1"
+                    />
+                    <Button
+                      onClick={addEmail}
+                      size="sm"
+                      disabled={!newEmail.trim()}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
 
-            {/* Email Section */}
-            <div className="w-full space-y-2">
-              {mounted && (
-                <Input
-                  type="text"
-                  placeholder="Enter multiple emails (comma separated)"
-                  value={emails}
-                  onChange={(e) => setEmails(e.target.value)}
-                  suppressHydrationWarning
-                />
+                  {/* Email List */}
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {emailList.length === 0 ? (
+                      <p className="text-sm text-gray-500 text-center py-4">
+                        No email addresses added yet
+                      </p>
+                    ) : (
+                      emailList.map((email, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between bg-gray-50 p-2 rounded"
+                        >
+                          <span className="text-sm">{email}</span>
+                          <Button
+                            onClick={() => removeEmail(index)}
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0 hover:bg-red-100"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+
+                  {/* Send Button */}
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsEmailModalOpen(false)}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleEmailModalSend}
+                      disabled={isGeneratingEmail || emailList.length === 0}
+                      className="bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      {isGeneratingEmail ? (
+                        <>
+                          <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                          Sending...
+                        </>
+                      ) : (
+                        <>
+                          <Mail className="h-4 w-4 mr-2" />
+                          Send Email
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+
+        {/* SECTION 4: Fees Charged */}
+        <div className="flex-shrink-0 p-3 border-b bg-white">
+          <div className="flex items-center space-x-3">
+            <label className="text-sm font-medium text-gray-700 min-w-fit">
+              Fees Charged:
+            </label>
+            {mounted && (
+              <Input
+                type="number"
+                placeholder="0"
+                value={feesCharged || ""}
+                onChange={(e) => updateFeesCharged(Number(e.target.value) || 0)}
+                suppressHydrationWarning
+                className="flex-1"
+              />
+            )}
+          </div>
+        </div>
+
+        {/* SECTION 5: Scrollable Services and Client Info */}
+        <div className="flex-1 overflow-hidden">
+          <div className="h-full overflow-y-auto">
+            <div className="p-3 space-y-3">
+              {/* Client Information */}
+              {(clientInfo.clientGroup ||
+                clientInfo.entities.some((e) => e.name)) && (
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <h3 className="font-semibold text-sm mb-2">
+                    Client Information
+                  </h3>
+                  {clientInfo.clientGroup && (
+                    <p className="text-xs mb-1">
+                      <strong>Group:</strong> {clientInfo.clientGroup}
+                    </p>
+                  )}
+                  {clientInfo.entities.map(
+                    (entity, index) =>
+                      entity.name && (
+                        <p key={index} className="text-xs mb-1">
+                          <strong>Entity {index + 1}:</strong> {entity.name} (
+                          {entity.entityType})
+                        </p>
+                      )
+                  )}
+                  {clientInfo.contactPerson && (
+                    <p className="text-xs mb-1">
+                      <strong>Contact:</strong> {clientInfo.contactPerson}
+                    </p>
+                  )}
+                  {clientInfo.address && (
+                    <p className="text-xs">
+                      <strong>Address:</strong> {clientInfo.address}
+                    </p>
+                  )}
+                </div>
               )}
-              <Button
-                onClick={handleEmailEstimate}
-                variant="outline"
-                className="w-full"
-                disabled={isGeneratingEmail}
-              >
-                {isGeneratingEmail ? (
-                  <>
-                    <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
-                    Sending Email...
-                  </>
-                ) : (
-                  "Email Estimate"
-                )}
-              </Button>
+
+              {/* Services by Section - Compact Rows */}
+              <div className="space-y-3">
+                {getValidSections(sections).map((section) => (
+                  <div key={section.id} className="space-y-1">
+                    <h3 className="font-semibold text-sm text-gray-800 border-b pb-1">
+                      {section.name}
+                    </h3>
+                    <div className="space-y-1">
+                      {section.services.map((service) => {
+                        if (
+                          service.type === "withOptions" &&
+                          service.selectedOption &&
+                          service.quantity
+                        ) {
+                          const options = getServiceOptions(
+                            section.id,
+                            service.id
+                          );
+                          const selectedOpt = options.find(
+                            (opt) => opt.value === service.selectedOption
+                          );
+
+                          const rate = service.useCustomRate
+                            ? service.customRate ?? selectedOpt?.rate ?? 0
+                            : selectedOpt?.rate ?? 0;
+                          const cost = (service.quantity ?? 0) * rate;
+
+                          return (
+                            <div
+                              key={service.id}
+                              className="flex justify-between items-center py-2 px-2 hover:bg-gray-50 rounded"
+                            >
+                              <div className="flex-1 pr-2">
+                                <p className="text-sm font-medium text-gray-900">
+                                  {service.name}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {selectedOpt?.label} - {service.quantity} × $
+                                  {rate.toFixed(0)} each
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-semibold text-green-600">
+                                  ${cost.toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        } else if (
+                          service.type === "fixedCost" &&
+                          service.value !== undefined
+                        ) {
+                          return (
+                            <div
+                              key={service.id}
+                              className="flex justify-between items-center py-2 px-2 hover:bg-gray-50 rounded"
+                            >
+                              <div className="flex-1 pr-2">
+                                <p className="text-sm font-medium text-gray-900">
+                                  {service.name}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  Fixed cost service
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-semibold text-green-600">
+                                  ${service.value.toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        } else if (
+                          service.type === "manualInput" &&
+                          service.customDescription &&
+                          service.customAmount !== undefined &&
+                          service.customRate !== undefined
+                        ) {
+                          const cost =
+                            service.customAmount * service.customRate;
+                          return (
+                            <div
+                              key={service.id}
+                              className="flex justify-between items-center py-2 px-2 hover:bg-gray-50 rounded"
+                            >
+                              <div className="flex-1 pr-2">
+                                <p className="text-sm font-medium text-gray-900">
+                                  {service.name}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {service.customAmount} × $
+                                  {service.customRate.toFixed(0)} each
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-semibold text-green-600">
+                                  ${cost.toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        } else if (
+                          service.type === "rnD" &&
+                          service.rdExpenses !== undefined &&
+                          service.rdExpenses > 0
+                        ) {
+                          const refundAmount = service.rdExpenses * 0.435;
+                          const ourFees = Math.max(refundAmount * 0.1, 2500);
+                          return (
+                            <div
+                              key={service.id}
+                              className="flex justify-between items-center py-2 px-2 hover:bg-gray-50 rounded"
+                            >
+                              <div className="flex-1 pr-2">
+                                <p className="text-sm font-medium text-gray-900">
+                                  {service.name}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  R&D Expenses: $
+                                  {service.rdExpenses.toLocaleString()}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-sm font-semibold text-green-600">
+                                  ${ourFees.toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Empty state when no services */}
+              {getValidSections(sections).length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  <p className="text-sm">No services selected</p>
+                  <p className="text-xs mt-1">
+                    Select services from the form to see them here
+                  </p>
+                </div>
+              )}
+
+              {/* Bottom spacing */}
+              <div className="h-6"></div>
             </div>
-          </CardFooter>
-        </Card>
+          </div>
+        </div>
       </div>
     </ClientWrapper>
   );

@@ -181,22 +181,22 @@ export const QuoteManager: React.FC = () => {
     }
   }, [resetStore]);
 
-  const handleQuoteSaved = useCallback(
-    async (quoteId: string) => {
-      setSelectedQuoteId(quoteId);
+  const handleQuoteSaved = useCallback(async (quoteId: string) => {
+    console.log("handleQuoteSaved called with quoteId:", quoteId);
+    setSelectedQuoteId(quoteId);
 
-      // Refresh the quote list to show the new/updated quote
-      if (quoteListRef.current) {
-        await quoteListRef.current.refreshQuotes();
-      }
+    // Refresh the quote list to show the new/updated quote
+    if (quoteListRef.current) {
+      console.log("Refreshing quote list...");
+      await quoteListRef.current.refreshQuotes();
+      console.log("Quote list refreshed");
+    } else {
+      console.log("quoteListRef.current is null");
+    }
 
-      // Reset form for new quote creation
-      if (!selectedQuoteId) {
-        resetStore();
-      }
-    },
-    [selectedQuoteId, resetStore]
-  );
+    // Form is cleared in SummaryCard after successful save
+    // Don't reset here to avoid interference
+  }, []);
 
   const handleDeleteComplete = useCallback(
     async (deletedQuoteId: string) => {
