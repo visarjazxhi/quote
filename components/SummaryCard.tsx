@@ -549,7 +549,6 @@ export default function SummaryCard({
     return doc;
   };
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const handleDownloadPDF = useCallback(async () => {
     const doc = generatePDFContent();
     doc.save("estimate.pdf");
@@ -568,7 +567,8 @@ export default function SummaryCard({
         console.error("Error updating quote status:", error);
       }
     }
-  }, [currentQuoteId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [generatePDFContent, currentQuoteId]);
 
   // Add event listener for download PDF events from QuoteList
   useEffect(() => {
