@@ -224,12 +224,6 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           type: "withOptions",
         },
         {
-          id: "cleardocs",
-          name: "New client - Cleardocs",
-          description: "Setting up new clients from Cleardocs.",
-          type: "withOptions",
-        },
-        {
           id: "admin-other",
           name: "Other",
           description: "Any other administrative services required.",
