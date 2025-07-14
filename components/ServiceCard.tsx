@@ -1,50 +1,41 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { ServiceOption, useEstimationStore } from "@/lib/store";
+} from "./ui/select";
 
-import { Checkbox } from "@/components/ui/checkbox";
-import ClientWrapper from "./ClientWrapper";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
+import { Checkbox } from "./ui/checkbox";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import React from "react";
+import type { Service } from "@/lib/store";
+import { Textarea } from "./ui/textarea";
+import { useEstimationStore } from "@/lib/store";
 
 interface ServiceCardProps {
-  service: {
-    id: string;
-    name: string;
-    description: string;
-    basePrice: number;
-    category: string;
-    timeEstimate?: string;
-    complexity?: "Low" | "Medium" | "High";
-  };
+  service: Service;
   sectionId: string;
 }
 
-export default function ServiceCard({ service, sectionId }: ServiceCardProps) {
+export const ServiceCard: React.FC<ServiceCardProps> = ({
+  service,
+  sectionId,
+}) => {
   const {
     sections,
+    toggleService,
     updateOption,
     updateQuantity,
-    updateFixedCost,
     updateCustomRate,
     toggleCustomRate,
-    toggleService,
+    updateFixedCost,
+    updateManualInput,
+    updateRnDExpenses,
     getServiceOptions,
   } = useEstimationStore();
 
@@ -52,60 +43,94 @@ export default function ServiceCard({ service, sectionId }: ServiceCardProps) {
   const section = sections.find((s) => s.id === sectionId);
   const storeService = section?.services.find((s) => s.id === service.id);
 
-  // Check if service is selected (works for both service types)
+  // Check if service is selected (works for all service types)
   const isSelected = Boolean(
     storeService &&
       ((storeService.type === "withOptions" &&
         storeService.selectedOption !== undefined) ||
-        (storeService.type === "fixedCost" && storeService.value !== undefined))
+        (storeService.type === "fixedCost" &&
+          storeService.value !== undefined) ||
+        (storeService.type === "manualInput" &&
+          storeService.customDescription !== undefined) ||
+        (storeService.type === "rnD" && storeService.rdExpenses !== undefined))
   );
 
   const selectedOption =
     storeService?.type === "withOptions"
       ? storeService.selectedOption
       : undefined;
+
   const quantity =
     storeService?.type === "withOptions" ? storeService.quantity : undefined;
-  const fixedValue =
-    storeService?.type === "fixedCost" ? storeService.value : undefined;
+
   const customRate =
     storeService?.type === "withOptions" ? storeService.customRate : undefined;
+
   const useCustomRate =
     storeService?.type === "withOptions" ? storeService.useCustomRate : false;
 
-  const handleToggle = (checked: boolean) => {
+  const handleToggle = () => {
     toggleService(sectionId, service.id);
-    if (checked) {
-      toast.success(`Added ${service.name} to estimate`);
-    } else {
-      toast.success(`Removed ${service.name} from estimate`);
-    }
   };
 
   const handleOptionChange = (value: string) => {
     updateOption(sectionId, service.id, value);
-    toast.success(`Selected ${value} rate for ${service.name}`);
   };
 
   const handleQuantityChange = (newQuantity: number) => {
     updateQuantity(sectionId, service.id, newQuantity);
   };
 
-  const handleFixedCostChange = (newValue: number) => {
-    updateFixedCost(sectionId, service.id, newValue);
-  };
-
-  const handleCustomRateToggle = (checked: boolean) => {
+  const handleCustomRateToggle = () => {
     toggleCustomRate(sectionId, service.id);
-    if (checked) {
-      toast.success(`Enabled custom rate for ${service.name}`);
-    } else {
-      toast.success(`Disabled custom rate for ${service.name}`);
-    }
   };
 
   const handleCustomRateChange = (newRate: number) => {
     updateCustomRate(sectionId, service.id, newRate);
+  };
+
+  const handleManualInputChange = (
+    field: "customDescription" | "customAmount" | "customRate",
+    value: string | number
+  ) => {
+    updateManualInput(sectionId, service.id, field, value);
+  };
+
+  const handleRnDExpensesChange = (expenses: number) => {
+    updateRnDExpenses(sectionId, service.id, expenses);
+  };
+
+  const getManualInputValue = (
+    field: "customDescription" | "customAmount" | "customRate"
+  ) => {
+    if (storeService?.type === "manualInput") {
+      return storeService[field] ?? (field === "customDescription" ? "" : 0);
+    }
+    return field === "customDescription" ? "" : 0;
+  };
+
+  const calculateManualTotal = () => {
+    if (storeService?.type === "manualInput") {
+      const amount = storeService.customAmount ?? 0;
+      const rate = storeService.customRate ?? 0;
+      return amount * rate;
+    }
+    return 0;
+  };
+
+  const isManualInputComplete = (): boolean => {
+    if (storeService?.type === "manualInput") {
+      const { customDescription, customAmount, customRate } = storeService;
+      return Boolean(
+        customDescription &&
+          customDescription.trim() !== "" &&
+          customAmount &&
+          customAmount > 0 &&
+          customRate &&
+          customRate > 0
+      );
+    }
+    return false;
   };
 
   // Get rate options from the store service (only for withOptions type)
@@ -119,17 +144,31 @@ export default function ServiceCard({ service, sectionId }: ServiceCardProps) {
       return customRate;
     }
     if (!selectedOption || !rateOptions) return 0;
-    const option = rateOptions.find(
-      (opt: ServiceOption) => opt.value === selectedOption
-    );
+    const option = rateOptions.find((opt) => opt.value === selectedOption);
     return option?.rate || 0;
+  };
+
+  const calculateRnDRefund = () => {
+    if (storeService?.type === "rnD" && storeService.rdExpenses) {
+      return storeService.rdExpenses * 0.435;
+    }
+    return 0;
+  };
+
+  const calculateRnDFees = () => {
+    const refundAmount = calculateRnDRefund();
+    return Math.max(refundAmount * 0.1, 2500);
   };
 
   const getTotalCost = () => {
     if (storeService?.type === "withOptions") {
       return getSelectedRate() * (quantity || 0);
     } else if (storeService?.type === "fixedCost") {
-      return fixedValue || 0;
+      return storeService.value || 0;
+    } else if (storeService?.type === "manualInput") {
+      return calculateManualTotal();
+    } else if (storeService?.type === "rnD") {
+      return calculateRnDFees();
     }
     return 0;
   };
@@ -143,279 +182,331 @@ export default function ServiceCard({ service, sectionId }: ServiceCardProps) {
   }
 
   return (
-    <ClientWrapper
-      fallback={
-        <Card className="h-16 flex flex-col" suppressHydrationWarning>
-          <CardHeader suppressHydrationWarning>
-            <div className="animate-pulse space-y-2" suppressHydrationWarning />
-          </CardHeader>
-        </Card>
-      }
-    >
-      <motion.div
-        variants={{
-          hidden: { opacity: 0, y: 20 },
-          visible: { opacity: 1, y: 0 },
-        }}
-        className="w-full h-full"
-        suppressHydrationWarning
-      >
-        <Card
-          className={`w-full flex flex-col transition-all duration-300 hover:shadow-md group ${
-            isSelected ? "h-96" : "h-16"
-          }`}
-          suppressHydrationWarning
-        >
-          {/* Compact Header - Always Visible */}
-          <CardHeader
-            className="pb-2 pt-3 px-4 flex-row items-start justify-between space-y-0 min-h-[4rem]"
-            suppressHydrationWarning
-          >
+    <Card className="h-full">
+      <CardHeader className="pb-3">
+        <div className="flex items-start space-x-3">
+          <Checkbox
+            id={service.id}
+            checked={isSelected}
+            onCheckedChange={handleToggle}
+            className="mt-1"
+          />
+          <div className="flex-1 min-w-0">
             <CardTitle
-              className="text-sm font-semibold leading-tight flex-1 pr-2 line-clamp-2"
-              suppressHydrationWarning
+              className="text-sm font-medium leading-tight line-clamp-2 cursor-default"
               title={service.name}
             >
               {service.name}
             </CardTitle>
-            <Checkbox
-              checked={isSelected}
-              onCheckedChange={handleToggle}
-              className="flex-shrink-0 mt-0.5"
-              suppressHydrationWarning
-            />
-          </CardHeader>
-
-          {/* Expanded Content - Only when selected */}
-          <AnimatePresence>
-            {isSelected && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-                suppressHydrationWarning
+            {service.description && (
+              <p
+                className="text-xs text-muted-foreground mt-1 leading-tight line-clamp-2 cursor-default"
+                title={service.description}
               >
-                <CardHeader className="pt-0 pb-3 px-4" suppressHydrationWarning>
-                  <CardDescription
-                    className="text-sm line-clamp-2"
-                    title={service.description}
-                    suppressHydrationWarning
-                  >
-                    {service.description}
-                  </CardDescription>
-                </CardHeader>
-
-                <CardContent
-                  className="flex-grow flex flex-col space-y-2 pt-0 px-4 pb-3"
-                  suppressHydrationWarning
-                >
-                  {/* For withOptions services */}
-                  {storeService?.type === "withOptions" && (
-                    <div className="space-y-4" suppressHydrationWarning>
-                      {/* Form Fields Container */}
-                      <div className="space-y-3" suppressHydrationWarning>
-                        {/* Rate Selection - Hidden when custom rate is active */}
-                        {!useCustomRate && (
-                          <div className="space-y-2" suppressHydrationWarning>
-                            <Label
-                              htmlFor={`rate-${service.id}`}
-                              suppressHydrationWarning
-                            >
-                              Select Rate Level
-                            </Label>
-                            <Select
-                              value={selectedOption || ""}
-                              onValueChange={handleOptionChange}
-                            >
-                              <SelectTrigger suppressHydrationWarning>
-                                <SelectValue placeholder="Choose rate level" />
-                              </SelectTrigger>
-                              <SelectContent suppressHydrationWarning>
-                                {rateOptions.map((option: ServiceOption) => (
-                                  <SelectItem
-                                    key={option.value}
-                                    value={option.value}
-                                    suppressHydrationWarning
-                                  >
-                                    {option.label} - ${option.rate}/hour
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        )}
-
-                        {/* Custom Rate Toggle */}
-                        {selectedOption && (
-                          <div
-                            className="flex items-center space-x-2"
-                            suppressHydrationWarning
-                          >
-                            <Checkbox
-                              id={`custom-rate-${service.id}`}
-                              checked={useCustomRate}
-                              onCheckedChange={handleCustomRateToggle}
-                              suppressHydrationWarning
-                            />
-                            <Label
-                              htmlFor={`custom-rate-${service.id}`}
-                              suppressHydrationWarning
-                              className="text-sm"
-                            >
-                              Use custom rate
-                            </Label>
-                          </div>
-                        )}
-
-                        {/* Dynamic Fields Container - Fixed Height */}
-                        <div className="min-h-[80px]" suppressHydrationWarning>
-                          {/* Custom Rate Input */}
-                          {selectedOption && useCustomRate && (
-                            <div className="space-y-2 mb-3" suppressHydrationWarning>
-                              <Label
-                                htmlFor={`custom-rate-input-${service.id}`}
-                                suppressHydrationWarning
-                              >
-                                Custom Rate ($/hour)
-                              </Label>
-                              <Input
-                                id={`custom-rate-input-${service.id}`}
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                placeholder="0.00"
-                                value={customRate || ""}
-                                onChange={(e) =>
-                                  handleCustomRateChange(
-                                    parseFloat(e.target.value) || 0
-                                  )
-                                }
-                                suppressHydrationWarning
-                              />
-                            </div>
-                          )}
-
-                          {/* Quantity Input */}
-                          {selectedOption && (
-                            <div className="space-y-2" suppressHydrationWarning>
-                              <Label
-                                htmlFor={`quantity-${service.id}`}
-                                suppressHydrationWarning
-                              >
-                                Quantity (Hours)
-                              </Label>
-                              <Input
-                                id={`quantity-${service.id}`}
-                                type="number"
-                                min="0"
-                                step="0.5"
-                                placeholder="0"
-                                value={quantity || ""}
-                                onChange={(e) =>
-                                  handleQuantityChange(
-                                    parseFloat(e.target.value) || 0
-                                  )
-                                }
-                                suppressHydrationWarning
-                              />
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Fixed Cost Display */}
-                      <div className="mt-auto" suppressHydrationWarning>
-                        {selectedOption && quantity && quantity > 0 ? (
-                          <div
-                            className="p-2 bg-muted rounded-lg border-l-4 border-primary overflow-hidden"
-                            suppressHydrationWarning
-                          >
-                            <div className="flex justify-between items-center">
-                              <span className="font-semibold text-primary text-sm truncate">
-                                Total: ${getSelectedRate()} x {quantity} = ${getTotalCost().toFixed(2)}
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div
-                            className="p-2 bg-gray-50 rounded-lg border border-dashed border-gray-300 text-center"
-                            suppressHydrationWarning
-                          >
-                            <span className="text-muted-foreground text-xs">
-                              Select rate and quantity
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* For fixedCost services */}
-                  {storeService?.type === "fixedCost" && (
-                    <>
-                      {/* Fixed Cost Input */}
-                      <div className="space-y-2" suppressHydrationWarning>
-                        <Label
-                          htmlFor={`fixed-cost-${service.id}`}
-                          suppressHydrationWarning
-                        >
-                          Fixed Cost Amount ($)
-                        </Label>
-                        <Input
-                          id={`fixed-cost-${service.id}`}
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          placeholder="0.00"
-                          value={fixedValue || ""}
-                          onChange={(e) =>
-                            handleFixedCostChange(
-                              parseFloat(e.target.value) || 0
-                            )
-                          }
-                          suppressHydrationWarning
-                        />
-                      </div>
-
-                      {/* Cost Display for fixedCost - Compact */}
-                      <div className="mt-2" suppressHydrationWarning>
-                        {fixedValue && fixedValue > 0 ? (
-                          <div
-                            className="p-2 bg-muted rounded-lg border-l-4 border-green-500 overflow-hidden"
-                            suppressHydrationWarning
-                          >
-                            <div
-                              className="flex justify-between items-center"
-                              suppressHydrationWarning
-                            >
-                              <span className="font-semibold text-green-700 text-sm truncate">
-                                Fixed Cost:
-                              </span>
-                              <span className="font-bold text-green-700 text-right text-sm">
-                                ${getTotalCost().toFixed(2)}
-                              </span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div
-                            className="p-2 bg-gray-50 rounded-lg border border-dashed border-gray-300 text-center"
-                            suppressHydrationWarning
-                          >
-                            <span className="text-muted-foreground text-xs">
-                              Enter amount
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </motion.div>
+                {service.description}
+              </p>
             )}
-          </AnimatePresence>
-        </Card>
-      </motion.div>
-    </ClientWrapper>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        {storeService.type === "withOptions" && isSelected && (
+          <div className="space-y-4">
+            {/* Form Fields Container */}
+            <div className="space-y-3">
+              {/* Rate Selection - Hidden when custom rate is active */}
+              {!useCustomRate && (
+                <div className="space-y-2">
+                  <Label htmlFor={`rate-${service.id}`} className="text-xs">
+                    Select Rate Level
+                  </Label>
+                  <Select
+                    value={selectedOption || ""}
+                    onValueChange={handleOptionChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose rate level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {rateOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label} - ${option.rate}/hour
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Custom Rate Toggle */}
+              {selectedOption && (
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`custom-rate-${service.id}`}
+                    checked={useCustomRate}
+                    onCheckedChange={handleCustomRateToggle}
+                  />
+                  <Label
+                    htmlFor={`custom-rate-${service.id}`}
+                    className="text-xs"
+                  >
+                    Use custom rate
+                  </Label>
+                </div>
+              )}
+
+              {/* Dynamic Fields Container */}
+              <div className="min-h-[80px]">
+                {/* Custom Rate Input */}
+                {selectedOption && useCustomRate && (
+                  <div className="space-y-2 mb-3">
+                    <Label
+                      htmlFor={`custom-rate-input-${service.id}`}
+                      className="text-xs"
+                    >
+                      Custom Rate ($/hour)
+                    </Label>
+                    <Input
+                      id={`custom-rate-input-${service.id}`}
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="0.00"
+                      value={customRate || ""}
+                      onChange={(e) =>
+                        handleCustomRateChange(parseFloat(e.target.value) || 0)
+                      }
+                    />
+                  </div>
+                )}
+
+                {/* Quantity Input */}
+                {selectedOption && (
+                  <div className="space-y-2">
+                    <Label
+                      htmlFor={`quantity-${service.id}`}
+                      className="text-xs"
+                    >
+                      Quantity (Hours)
+                    </Label>
+                    <Input
+                      id={`quantity-${service.id}`}
+                      type="number"
+                      min="0"
+                      step="0.5"
+                      placeholder="0"
+                      value={quantity || ""}
+                      onChange={(e) =>
+                        handleQuantityChange(parseFloat(e.target.value) || 0)
+                      }
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Cost Display */}
+            <div className="mt-4">
+              {selectedOption && quantity && quantity > 0 ? (
+                <div className="p-2 bg-muted rounded-lg border-l-4 border-primary overflow-hidden">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-primary text-sm truncate">
+                      Total: ${getSelectedRate()} x {quantity} = $
+                      {getTotalCost().toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-2 bg-gray-50 rounded-lg border border-dashed border-gray-300 text-center">
+                  <span className="text-muted-foreground text-xs">
+                    Select rate and quantity
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {storeService.type === "manualInput" && isSelected && (
+          <div className="space-y-3">
+            <div>
+              <Label htmlFor={`${service.id}-description`} className="text-xs">
+                Description
+              </Label>
+              <Textarea
+                id={`${service.id}-description`}
+                placeholder="Enter service description"
+                value={getManualInputValue("customDescription") as string}
+                onChange={(e) =>
+                  handleManualInputChange("customDescription", e.target.value)
+                }
+                className="mt-1 min-h-[60px]"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor={`${service.id}-amount`} className="text-xs">
+                  Amount
+                </Label>
+                <Input
+                  id={`${service.id}-amount`}
+                  type="number"
+                  placeholder="0"
+                  value={getManualInputValue("customAmount") || ""}
+                  onChange={(e) =>
+                    handleManualInputChange(
+                      "customAmount",
+                      parseFloat(e.target.value) || 0
+                    )
+                  }
+                  className="mt-1"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor={`${service.id}-rate`} className="text-xs">
+                  Rate
+                </Label>
+                <Input
+                  id={`${service.id}-rate`}
+                  type="number"
+                  placeholder="0.00"
+                  value={getManualInputValue("customRate") || ""}
+                  onChange={(e) =>
+                    handleManualInputChange(
+                      "customRate",
+                      parseFloat(e.target.value) || 0
+                    )
+                  }
+                  className="mt-1"
+                  min="0"
+                  step="0.01"
+                />
+              </div>
+            </div>
+
+            {isManualInputComplete() && (
+              <div className="pt-2 border-t">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs text-muted-foreground">Total:</span>
+                  <span className="text-sm font-medium">
+                    ${calculateManualTotal().toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {storeService.type === "fixedCost" && isSelected && (
+          <div className="space-y-3">
+            {/* Fixed Cost Input */}
+            <div className="space-y-2">
+              <Label htmlFor={`fixed-cost-${service.id}`} className="text-xs">
+                Fixed Cost Amount ($)
+              </Label>
+              <Input
+                id={`fixed-cost-${service.id}`}
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={storeService.value || ""}
+                onChange={(e) =>
+                  updateFixedCost(
+                    sectionId,
+                    service.id,
+                    parseFloat(e.target.value) || 0
+                  )
+                }
+              />
+            </div>
+
+            {/* Cost Display for fixedCost */}
+            <div className="mt-4">
+              {storeService.value && storeService.value > 0 ? (
+                <div className="p-2 bg-muted rounded-lg border-l-4 border-green-500 overflow-hidden">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-green-700 text-sm truncate">
+                      Fixed Cost:
+                    </span>
+                    <span className="font-bold text-green-700 text-right text-sm">
+                      ${getTotalCost().toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-2 bg-gray-50 rounded-lg border border-dashed border-gray-300 text-center">
+                  <span className="text-muted-foreground text-xs">
+                    Enter amount
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {storeService.type === "rnD" && isSelected && (
+          <div className="space-y-4">
+            {/* R&D Expenses Input */}
+            <div className="space-y-2">
+              <Label htmlFor={`rnd-expenses-${service.id}`} className="text-xs">
+                What are your total R&D Expenses (GST Excluded) ($)?
+              </Label>
+              <Input
+                id={`rnd-expenses-${service.id}`}
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={storeService.rdExpenses || ""}
+                onChange={(e) =>
+                  handleRnDExpensesChange(parseFloat(e.target.value) || 0)
+                }
+              />
+            </div>
+
+            {/* R&D Calculations Display */}
+            {storeService.rdExpenses && storeService.rdExpenses > 0 && (
+              <div className="space-y-3 p-3 bg-blue-50 rounded-lg border">
+                <div className="text-xs font-medium text-blue-900">
+                  R&D Tax Incentive Calculation
+                </div>
+
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">R&D Expenses:</span>
+                    <span className="font-medium">
+                      ${storeService.rdExpenses.toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">
+                      Refund Amount (43.5%):
+                    </span>
+                    <span className="font-medium text-green-600">
+                      ${calculateRnDRefund().toLocaleString()}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between pt-2 border-t border-blue-200">
+                    <span className="text-gray-600">
+                      Our Fees (10% min $2,500):
+                    </span>
+                    <span className="font-semibold text-blue-600">
+                      ${calculateRnDFees().toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
-}
+};

@@ -15,12 +15,10 @@ export const STANDARD_RATES = {
   partner: { value: "partner", label: "Partner", rate: 600 },
 } as const;
 
-// Helper function to get standard rate options
 export const getStandardRateOptions = (): ServiceOption[] => {
   return Object.values(STANDARD_RATES);
 };
 
-// Helper function to get specific rate options
 export const getCustomRateOptions = (
   rateKeys: (keyof typeof STANDARD_RATES)[]
 ): ServiceOption[] => {
@@ -53,7 +51,29 @@ export interface ServiceWithFixedCost {
   value?: number;
 }
 
-export type Service = ServiceWithOptions | ServiceWithFixedCost;
+export interface ServiceWithManualInput {
+  id: string;
+  name: string;
+  description: string;
+  type: "manualInput";
+  customDescription?: string;
+  customAmount?: number;
+  customRate?: number;
+}
+
+export interface ServiceWithRnD {
+  id: string;
+  name: string;
+  description: string;
+  type: "rnD";
+  rdExpenses?: number; // Total R&D expenses (GST excluded)
+}
+
+export type Service =
+  | ServiceWithOptions
+  | ServiceWithFixedCost
+  | ServiceWithManualInput
+  | ServiceWithRnD;
 
 export interface ServiceSection {
   id: string;
@@ -104,6 +124,17 @@ interface EstimationStore {
     sectionId: string,
     serviceId: string,
     value: number
+  ) => void;
+  updateManualInput: (
+    sectionId: string,
+    serviceId: string,
+    field: "customDescription" | "customAmount" | "customRate",
+    value: string | number
+  ) => void;
+  updateRnDExpenses: (
+    sectionId: string,
+    serviceId: string,
+    expenses: number
   ) => void;
   updateClientGroup: (clientGroup: string) => void;
   updateClientAddress: (address: string) => void;
@@ -198,6 +229,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Setting up new clients from Cleardocs.",
           type: "withOptions",
         },
+        {
+          id: "admin-other",
+          name: "Other",
+          description: "Any other administrative services required.",
+          type: "manualInput",
+        },
       ],
     },
     {
@@ -261,6 +298,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "senior",
             "partner",
           ]),
+        },
+        {
+          id: "applications-other",
+          name: "Other",
+          description: "Any other application services required.",
+          type: "manualInput",
         },
       ],
     },
@@ -330,7 +373,7 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           id: "other",
           name: "Other",
           description: "Any other additional services required.",
-          type: "withOptions",
+          type: "manualInput",
         },
         {
           id: "client-outboarding",
@@ -368,6 +411,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           name: "Client Out Boarding",
           description: "Managing the transition and offboarding of clients.",
           type: "withOptions",
+        },
+        {
+          id: "corporate-secretarial-other",
+          name: "Other",
+          description: "Any other corporate secretarial services required.",
+          type: "manualInput",
         },
       ],
     },
@@ -408,6 +457,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           name: "Client Out Boarding",
           description: "Managing the transition and offboarding of clients.",
           type: "withOptions",
+        },
+        {
+          id: "activity-statements-other",
+          name: "Other",
+          description: "Any other activity statement services required.",
+          type: "manualInput",
         },
       ],
     },
@@ -497,6 +552,12 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Managing accounts receivable and reconciling outstanding debts.",
           type: "withOptions",
         },
+        {
+          id: "bookkeeping-other",
+          name: "Other",
+          description: "Any other bookkeeping services required.",
+          type: "manualInput",
+        },
       ],
     },
     {
@@ -509,6 +570,61 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description: "Review of financial accounts and reports.",
           type: "withOptions",
           // Uses standard rates (including accountant level)
+        },
+        {
+          id: "client-management-meeting",
+          name: "Client Management Meeting",
+          description: "Regular client management and relationship meetings.",
+          type: "withOptions",
+        },
+        {
+          id: "client-tax-planning-meeting",
+          name: "Client Tax Planning Meeting",
+          description: "Strategic tax planning meetings with clients.",
+          type: "withOptions",
+        },
+        {
+          id: "strategic-planning-forecast",
+          name: "Strategic Planning & Forecast",
+          description:
+            "Business strategic planning and financial forecasting services.",
+          type: "withOptions",
+        },
+        {
+          id: "advisory-other",
+          name: "Other",
+          description: "Any other advisory services required.",
+          type: "manualInput",
+        },
+      ],
+    },
+    {
+      id: "startups",
+      name: "Startups",
+      services: [
+        {
+          id: "client-advise-meeting",
+          name: "Client Advise Meeting",
+          description: "Advisory meetings for startup clients.",
+          type: "withOptions",
+        },
+        {
+          id: "new-client-setup",
+          name: "New Client Setup",
+          description: "Complete setup process for new startup clients.",
+          type: "withOptions",
+        },
+        {
+          id: "cleardocs-startup",
+          name: "ClearDocs",
+          description: "ClearDocs services for startup clients.",
+          type: "withOptions",
+        },
+        {
+          id: "startups-other",
+          name: "Other",
+          description: "Any other startup services required.",
+          type: "manualInput",
         },
       ],
     },
@@ -551,25 +667,24 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             "Ensuring a smooth transfer of wealth through wills, trusts, and tax-efficient strategies.",
           type: "withOptions",
         },
+        {
+          id: "financial-planning-other",
+          name: "Other",
+          description: "Any other financial planning services required.",
+          type: "manualInput",
+        },
       ],
     },
     {
-      id: "fixed-costs",
-      name: "Adjustments",
+      id: "rnd",
+      name: "R&D",
       services: [
         {
-          id: "fixed-cost-1",
-          name: "Additional Fixed Cost",
-          description: "Any additional fixed cost.",
-          type: "fixedCost",
-          value: undefined,
-        },
-        {
-          id: "fixed-cost-2",
-          name: "Discounts",
-          description: "Enter a negative amount for a discount.",
-          type: "fixedCost",
-          value: undefined,
+          id: "rnd-tax-incentive",
+          name: "R&D Tax Incentive",
+          description:
+            "R&D tax incentive calculation and processing. Enter your total R&D expenses (GST excluded) to calculate the refund amount and our fees.",
+          type: "rnD",
         },
       ],
     },
@@ -610,6 +725,24 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
                     ? {
                         ...service,
                         value: service.value === undefined ? 0 : undefined,
+                      }
+                    : service.type === "manualInput"
+                    ? {
+                        ...service,
+                        customDescription:
+                          service.customDescription === undefined
+                            ? ""
+                            : undefined,
+                        customAmount:
+                          service.customAmount === undefined ? 0 : undefined,
+                        customRate:
+                          service.customRate === undefined ? 0 : undefined,
+                      }
+                    : service.type === "rnD"
+                    ? {
+                        ...service,
+                        rdExpenses:
+                          service.rdExpenses === undefined ? 0 : undefined,
                       }
                     : service
                   : service
@@ -705,6 +838,38 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
       ),
     })),
 
+  updateManualInput: (sectionId, serviceId, field, value) =>
+    set((state) => ({
+      sections: state.sections.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              services: section.services.map((service) =>
+                service.id === serviceId && service.type === "manualInput"
+                  ? { ...service, [field]: value }
+                  : service
+              ),
+            }
+          : section
+      ),
+    })),
+
+  updateRnDExpenses: (sectionId, serviceId, expenses) =>
+    set((state) => ({
+      sections: state.sections.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              services: section.services.map((service) =>
+                service.id === serviceId && service.type === "rnD"
+                  ? { ...service, rdExpenses: expenses }
+                  : service
+              ),
+            }
+          : section
+      ),
+    })),
+
   updateFeesCharged: (amount) =>
     set(() => ({
       feesCharged: amount,
@@ -735,6 +900,22 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             service.value !== undefined
           ) {
             return serviceTotal + service.value;
+          } else if (
+            service.type === "manualInput" &&
+            service.customAmount !== undefined &&
+            service.customRate !== undefined
+          ) {
+            return serviceTotal + service.customAmount * service.customRate;
+          } else if (
+            service.type === "rnD" &&
+            service.rdExpenses !== undefined &&
+            service.rdExpenses > 0
+          ) {
+            // R&D calculation: expenses * 43.5% = refund amount
+            const refundAmount = service.rdExpenses * 0.435;
+            // Our fees: 10% of refund amount, minimum $2500
+            const ourFees = Math.max(refundAmount * 0.1, 2500);
+            return serviceTotal + ourFees;
           }
           return serviceTotal;
         }, 0)

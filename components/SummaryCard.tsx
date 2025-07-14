@@ -25,6 +25,14 @@ const getValidSections = (sections: ServiceSection[]) => {
         return service.selectedOption && service.quantity;
       } else if (service.type === "fixedCost") {
         return service.value !== undefined;
+      } else if (service.type === "manualInput") {
+        return (
+          service.customDescription &&
+          service.customAmount &&
+          service.customRate
+        );
+      } else if (service.type === "rnD") {
+        return service.rdExpenses !== undefined && service.rdExpenses > 0;
       }
       return false;
     });
@@ -334,6 +342,104 @@ export default function SummaryCard() {
               doc.text(description, 25, yPosition);
               yPosition += description.length * 3 + 3;
             }
+          } else if (
+            service.type === "manualInput" &&
+            service.customDescription &&
+            service.customAmount !== undefined &&
+            service.customRate !== undefined
+          ) {
+            const totalAmount = service.customAmount * service.customRate;
+
+            // Check if we need space for service + description
+            const estimatedServiceHeight = service.customDescription ? 40 : 15;
+            yPosition = checkPageBreak(yPosition, estimatedServiceHeight);
+
+            // Manual Input service name
+            doc.setFontSize(9);
+            doc.setTextColor(0);
+            const serviceName = doc.splitTextToSize(service.name, 95);
+            doc.text(serviceName, 25, yPosition);
+
+            // Amount, Rate, Investment on the same line as service name
+            doc.setTextColor(100);
+            doc.text(`${service.customAmount}`, 130, yPosition, {
+              align: "center",
+            });
+
+            doc.text(`$${service.customRate.toFixed(0)}`, 155, yPosition, {
+              align: "center",
+            });
+
+            doc.setTextColor(0);
+            doc.text(`$${totalAmount.toFixed(2)}`, 190, yPosition, {
+              align: "right",
+            });
+
+            yPosition += serviceName.length * 4 + 2;
+
+            // Add service description below the service name
+            if (service.customDescription) {
+              doc.setFontSize(8);
+              doc.setTextColor(120);
+              const description = doc.splitTextToSize(
+                service.customDescription,
+                90
+              );
+              doc.text(description, 25, yPosition);
+              yPosition += description.length * 3 + 3;
+            }
+          } else if (
+            service.type === "rnD" &&
+            service.rdExpenses !== undefined &&
+            service.rdExpenses > 0
+          ) {
+            // R&D calculation
+            const refundAmount = service.rdExpenses * 0.435;
+            const ourFees = Math.max(refundAmount * 0.1, 2500);
+
+            // Check if we need space for R&D service
+            yPosition = checkPageBreak(yPosition, 25);
+
+            // R&D service name
+            doc.setFontSize(9);
+            doc.setTextColor(0);
+            const serviceName = doc.splitTextToSize(service.name, 95);
+            doc.text(serviceName, 25, yPosition);
+
+            // R&D Expenses and Our Fees
+            doc.setTextColor(100);
+            doc.text(
+              `$${service.rdExpenses.toLocaleString()}`,
+              130,
+              yPosition,
+              {
+                align: "center",
+              }
+            );
+
+            doc.text(`43.5%`, 155, yPosition, {
+              align: "center",
+            });
+
+            doc.setTextColor(0);
+            doc.text(`$${ourFees.toFixed(2)}`, 190, yPosition, {
+              align: "right",
+            });
+
+            yPosition += serviceName.length * 4 + 2;
+
+            // Add R&D calculation details
+            doc.setFontSize(8);
+            doc.setTextColor(120);
+            const rdDetails = [
+              `R&D Expenses: $${service.rdExpenses.toLocaleString()}`,
+              `Refund Amount (43.5%): $${refundAmount.toLocaleString()}`,
+              `Our Fees (10% min $2,500): $${ourFees.toLocaleString()}`,
+            ];
+            rdDetails.forEach((detail, index) => {
+              doc.text(detail, 25, yPosition + index * 4);
+            });
+            yPosition += rdDetails.length * 4 + 3;
           }
         });
         yPosition += 5; // Space between sections
@@ -477,6 +583,44 @@ export default function SummaryCard() {
                 2
               )}</td>
             </tr>`;
+        } else if (
+          service.type === "manualInput" &&
+          service.customDescription &&
+          service.customAmount !== undefined &&
+          service.customRate !== undefined
+        ) {
+          const totalAmount = service.customAmount * service.customRate;
+          servicesHtml += `
+            <tr>
+              <td style="padding: 6px; border-bottom: 1px solid #eee;">${
+                service.name
+              }</td>
+              <td style="padding: 6px; border-bottom: 1px solid #eee; text-align: center;">${
+                service.customAmount
+              } @ $${service.customRate}</td>
+              <td style="padding: 6px; border-bottom: 1px solid #eee; text-align: right;">$${totalAmount.toFixed(
+                2
+              )}</td>
+            </tr>`;
+        } else if (
+          service.type === "rnD" &&
+          service.rdExpenses !== undefined &&
+          service.rdExpenses > 0
+        ) {
+          // R&D calculation
+          const refundAmount = service.rdExpenses * 0.435;
+          const ourFees = Math.max(refundAmount * 0.1, 2500);
+
+          servicesHtml += `
+            <tr>
+              <td style="padding: 6px; border-bottom: 1px solid #eee;">${
+                service.name
+              }</td>
+              <td style="padding: 6px; border-bottom: 1px solid #eee; text-align: center;">$${service.rdExpenses.toLocaleString()} @ 43.5%</td>
+              <td style="padding: 6px; border-bottom: 1px solid #eee; text-align: right;">$${ourFees.toFixed(
+                2
+              )}</td>
+            </tr>`;
         }
       });
     });
@@ -594,8 +738,9 @@ export default function SummaryCard() {
           <div style="background-color: #e6fffa; padding: 15px; border-radius: 5px; border-left: 4px solid #38b2ac; margin-bottom: 20px;">
             <h4 style="margin-top: 0; color: #2d3748;">Important Notes:</h4>
             <ul style="margin: 10px 0; padding-left: 20px; line-height: 1.6;">
-              <li>All fees are quoted in Australian dollars and exclude GST where applicable</li>
-              <li>Services will commence upon acceptance of this proposal</li>
+              <li>All fees are quoted in Australian dollars and exclude GST</li>
+              <li>Any additional work outside the scope of this proposal will be quoted for and agreed upon prior to commencement</li>
+              <li>We look forward to the opportunity to work with you and provide exceptional service tailored to your needs</li>
             </ul>
           </div>
           
@@ -625,8 +770,13 @@ export default function SummaryCard() {
   };
 
   const handleEmailEstimate = async () => {
-    const emailList = emails.split(",").map((email) => email.trim());
-    if (emailList.length === 0 || emailList[0] === "") {
+    // Clean and validate emails
+    const emailList = emails
+      .split(",")
+      .map((email) => email.trim().toLowerCase())
+      .filter((email) => email !== "" && email.includes("@"));
+
+    if (emailList.length === 0) {
       toast.error("Please enter at least one valid email address.");
       return;
     }
@@ -894,6 +1044,27 @@ export default function SummaryCard() {
                                 <div className="flex justify-between">
                                   <span>{service.name}</span>
                                   <span>${service.value.toFixed(2)}</span>
+                                </div>
+                              </li>
+                            );
+                          } else if (
+                            service.type === "manualInput" &&
+                            service.customDescription &&
+                            service.customAmount !== undefined &&
+                            service.customRate !== undefined
+                          ) {
+                            const totalAmount =
+                              service.customAmount * service.customRate;
+                            return (
+                              <li key={service.id} className="flex flex-col">
+                                <div className="flex justify-between">
+                                  <span>{service.name}</span>
+                                  <span>${totalAmount.toFixed(2)}</span>
+                                </div>
+                                <div className="text-sm text-gray-500 pl-4">
+                                  {service.customDescription} - Rate: $
+                                  {service.customRate.toFixed(0)}/unit, Amount:{" "}
+                                  {service.customAmount}
                                 </div>
                               </li>
                             );

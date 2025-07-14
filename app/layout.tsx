@@ -1,12 +1,13 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "@/components/ui/sonner";
-import { ThemeProvider } from "@/components/theme-provider";
-import MainNav from "./components/MainNav";
+
 import { Analytics } from "@vercel/analytics/react";
-import { Suspense } from "react";
 import HydrationBoundary from "@/components/HydrationBoundary";
+import { Inter } from "next/font/google";
+import MainNav from "./components/MainNav";
+import type { Metadata } from "next";
+import { Suspense } from "react";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -45,7 +46,7 @@ export default function RootLayout({
               <footer className="border-t" suppressHydrationWarning>
                 <div className="container flex h-16 items-center justify-between" suppressHydrationWarning>
                   <p className="text-sm text-muted-foreground">
-                    © 2024 Integritas Technologies. All rights reserved.
+                    © 2025 Integritas Technologies. All rights reserved.
                   </p>
                 </div>
               </footer>
