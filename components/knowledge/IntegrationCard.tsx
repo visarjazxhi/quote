@@ -42,7 +42,7 @@ export default function IntegrationCard({ integration }: IntegrationCardProps) {
   return (
     <>
       <Card className="hover:shadow-lg transition-all duration-300 group h-full">
-        <CardContent className="p-4 flex flex-col h-full min-h-[320px]">
+        <CardContent className="p-4 flex flex-col h-full min-hnp-[320px]">
           <div className="flex flex-col items-center text-center space-y-2 mb-2">
             <div
               className="w-12 h-12 rounded-full flex items-center justify-center transition-colors duration-300"
