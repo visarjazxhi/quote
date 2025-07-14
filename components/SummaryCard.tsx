@@ -551,7 +551,6 @@ export default function SummaryCard({
     sections,
     clientInfo,
     getServiceOptions,
-    totalCost,
     discount,
     feesCharged,
     total,
