@@ -94,7 +94,7 @@ export default function SummaryCard({
     }
   };
 
-  const generatePDFContent = () => {
+  const generatePDFContent = useCallback(() => {
     const doc = new jsPDF();
     const pageHeight = doc.internal.pageSize.height;
     const marginBottom = 20; // Bottom margin
@@ -547,7 +547,15 @@ export default function SummaryCard({
     doc.text("Professional Accounting Services", 20, yPosition);
 
     return doc;
-  };
+  }, [
+    sections,
+    clientInfo,
+    getServiceOptions,
+    totalCost,
+    discount,
+    feesCharged,
+    total,
+  ]);
 
   const handleDownloadPDF = useCallback(async () => {
     const doc = generatePDFContent();
@@ -567,7 +575,6 @@ export default function SummaryCard({
         console.error("Error updating quote status:", error);
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [generatePDFContent, currentQuoteId]);
 
   // Add event listener for download PDF events from QuoteList
