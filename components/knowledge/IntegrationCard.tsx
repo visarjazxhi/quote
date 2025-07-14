@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
-import type { Integration } from "@/data/knowledge"
 import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
-import { Eye, Download, ExternalLink, FileText, FileArchive, File, Play } from "lucide-react"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Download, ExternalLink, Eye, File, FileArchive, FileText, Play } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+
+import { Button } from "@/components/ui/button"
+import type { Integration } from "@/data/knowledge"
+import { useState } from "react"
 
 type IntegrationCardProps = {
   integration: Integration

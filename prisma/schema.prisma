@@ -1,0 +1,96 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Quote {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Client Information
+  clientGroup     String?
+  address         String?
+  contactPerson   String?
+
+  // Quote Status
+  status          QuoteStatus @default(DRAFT)
+  
+  // Discount and Fees
+  discountDescription String?
+  discountAmount      Float   @default(0)
+  feesCharged         Float   @default(0)
+
+  // Related entities and services
+  entities   Entity[]
+  services   QuoteService[]
+
+  @@map("quotes")
+}
+
+model Entity {
+  id                  String  @id @default(cuid())
+  name                String
+  entityType          String
+  businessType        String
+  hasXeroFile         Boolean @default(false)
+  accountingSoftware  String?
+
+  quote   Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  quoteId String
+
+  @@map("entities")
+}
+
+model QuoteService {
+  id          String      @id @default(cuid())
+  serviceId   String      // Original service ID from the store
+  sectionId   String      // Section ID this service belongs to
+  serviceName String      // Service name for display
+  serviceType ServiceType
+
+  // For withOptions services
+  selectedOption String?
+  quantity       Int?
+  customRate     Float?
+  useCustomRate  Boolean @default(false)
+
+  // For fixedCost services
+  fixedValue Float?
+
+  // For manualInput services
+  customDescription String?
+  customAmount      Float?
+  customRateManual  Float?
+
+  // For R&D services
+  rdExpenses Float?
+
+  quote   Quote  @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  quoteId String
+
+  @@map("quote_services")
+}
+
+enum QuoteStatus {
+  DRAFT
+  DOWNLOADED
+  SENT
+}
+
+enum ServiceType {
+  WITH_OPTIONS
+  FIXED_COST
+  MANUAL_INPUT
+  RND
+}

@@ -102,7 +102,7 @@ export interface Discount {
   amount: number;
 }
 
-interface EstimationStore {
+export interface EstimationStore {
   sections: ServiceSection[];
   clientInfo: ClientInfo;
   discount: Discount;

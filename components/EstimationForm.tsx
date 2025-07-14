@@ -3,7 +3,6 @@
 import ClientInfoForm from "./ClientInfoForm";
 import ClientWrapper from "./ClientWrapper";
 import { ServiceCard } from "./ServiceCard";
-import SummaryCard from "./SummaryCard";
 import { motion } from "framer-motion";
 import { useEstimationStore } from "@/lib/store";
 
@@ -43,46 +42,34 @@ export default function EstimationForm() {
         <div className="space-y-6" suppressHydrationWarning>
           <ClientInfoForm />
 
-          <div
-            className="grid grid-cols-1 xl:grid-cols-4 gap-4"
-            suppressHydrationWarning
-          >
-            <div
-              className="col-span-1 xl:col-span-3 space-y-8"
-              suppressHydrationWarning
-            >
-              {sections.map((section) => (
-                <motion.div
-                  key={section.id}
-                  variants={sectionVariants}
-                  className="mb-8"
+          <div className="space-y-8" suppressHydrationWarning>
+            {sections.map((section) => (
+              <motion.div
+                key={section.id}
+                variants={sectionVariants}
+                className="mb-8"
+                suppressHydrationWarning
+              >
+                <h2
+                  className="text-2xl font-bold mb-6 text-primary"
                   suppressHydrationWarning
                 >
-                  <h2
-                    className="text-2xl font-bold mb-6 text-primary"
-                    suppressHydrationWarning
-                  >
-                    {section.name}
-                  </h2>
-                  <div
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
-                    suppressHydrationWarning
-                  >
-                    {section.services.map((service) => (
-                      <ServiceCard
-                        key={service.id}
-                        service={service}
-                        sectionId={section.id}
-                      />
-                    ))}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-
-            <div className="col-span-1" suppressHydrationWarning>
-              <SummaryCard />
-            </div>
+                  {section.name}
+                </h2>
+                <div
+                  className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+                  suppressHydrationWarning
+                >
+                  {section.services.map((service) => (
+                    <ServiceCard
+                      key={service.id}
+                      service={service}
+                      sectionId={section.id}
+                    />
+                  ))}
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
       </motion.div>

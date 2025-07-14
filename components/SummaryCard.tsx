@@ -1,6 +1,5 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import {
   Card,
   CardContent,
@@ -8,13 +7,15 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
+import { ChevronRight, Save } from "lucide-react";
 import { ServiceSection, useEstimationStore } from "@/lib/store";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "./ui/button";
 import ClientWrapper from "./ClientWrapper";
 import { Input } from "./ui/input";
 import { jsPDF } from "jspdf";
+import { saveQuoteToDatabase } from "@/lib/quote-utils";
 import { toast } from "sonner";
 
 const getValidSections = (sections: ServiceSection[]) => {
@@ -39,20 +40,30 @@ const getValidSections = (sections: ServiceSection[]) => {
   });
 };
 
-export default function SummaryCard() {
+interface SummaryCardProps {
+  currentQuoteId?: string;
+  onQuoteSaved?: (quoteId: string) => void;
+  onToggleVisibility?: () => void;
+}
+
+export default function SummaryCard({
+  currentQuoteId,
+  onQuoteSaved,
+  onToggleVisibility,
+}: SummaryCardProps = {}) {
   const {
     sections,
     clientInfo,
+    getServiceOptions,
+    totalCost,
     discount,
     feesCharged,
-    totalCost,
-    getServiceOptions,
     updateFeesCharged,
   } = useEstimationStore();
   const [emails, setEmails] = useState<string>("");
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isGeneratingEmail, setIsGeneratingEmail] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -61,8 +72,26 @@ export default function SummaryCard() {
   // Get total with fallback to prevent undefined errors
   const total = mounted ? totalCost() : 0;
 
-  const handleToggleCollapse = () => {
-    setIsCollapsed((prev) => !prev);
+  const handleSaveQuote = async () => {
+    try {
+      setIsSaving(true);
+      const quoteId = await saveQuoteToDatabase(currentQuoteId);
+
+      if (onQuoteSaved) {
+        onQuoteSaved(quoteId);
+      }
+
+      toast.success(
+        currentQuoteId
+          ? "Quote updated successfully!"
+          : "Quote saved successfully!"
+      );
+    } catch (error) {
+      console.error("Error saving quote:", error);
+      toast.error("Failed to save quote. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const generatePDFContent = () => {
@@ -520,9 +549,178 @@ export default function SummaryCard() {
     return doc;
   };
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = useCallback(async () => {
     const doc = generatePDFContent();
     doc.save("estimate.pdf");
+
+    // Update quote status to DOWNLOADED if we have a saved quote
+    if (currentQuoteId) {
+      try {
+        await fetch(`/api/quotes/${currentQuoteId}/status`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ status: "DOWNLOADED" }),
+        });
+      } catch (error) {
+        console.error("Error updating quote status:", error);
+      }
+    }
+  }, [generatePDFContent, currentQuoteId]);
+
+  // Add event listener for download PDF events from QuoteList
+  useEffect(() => {
+    const handleDownloadEvent = () => {
+      handleDownloadPDF();
+    };
+
+    const handleDownloadFromDataEvent = (event: CustomEvent) => {
+      handleDownloadPDFFromData(event.detail.quoteData);
+    };
+
+    window.addEventListener("downloadPDF", handleDownloadEvent);
+    window.addEventListener(
+      "downloadPDFFromData",
+      handleDownloadFromDataEvent as EventListener
+    );
+
+    return () => {
+      window.removeEventListener("downloadPDF", handleDownloadEvent);
+      window.removeEventListener(
+        "downloadPDFFromData",
+        handleDownloadFromDataEvent as EventListener
+      );
+    };
+  }, [handleDownloadPDF]);
+
+  const handleDownloadPDFFromData = async (quoteData: {
+    id?: string;
+    clientGroup?: string;
+    contactPerson?: string;
+    address?: string;
+    entities?: Array<{ name: string; entityType: string }>;
+    services?: Array<{ serviceName: string }>;
+    feesCharged?: number;
+  }) => {
+    try {
+      // Generate PDF using the provided quote data instead of current store state
+      const doc = new jsPDF();
+
+      // Function to add header to each page
+      const addHeader = () => {
+        // Logo and company info
+        doc.setFontSize(20);
+        doc.setFont("helvetica", "bold");
+        doc.text("INTEGRITAS TECHNOLOGIES", 20, 25);
+
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        doc.text("Professional Services Proposal", 20, 35);
+
+        // Client information from quote data
+        if (quoteData.clientGroup || quoteData.contactPerson) {
+          doc.setFontSize(14);
+          doc.setFont("helvetica", "bold");
+          doc.text("Client Information", 20, 50);
+
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "normal");
+          let yPos = 60;
+
+          if (quoteData.clientGroup) {
+            doc.text(`Client Group: ${quoteData.clientGroup}`, 20, yPos);
+            yPos += 8;
+          }
+
+          if (quoteData.contactPerson) {
+            doc.text(`Contact Person: ${quoteData.contactPerson}`, 20, yPos);
+            yPos += 8;
+          }
+
+          if (quoteData.address) {
+            doc.text(`Address: ${quoteData.address}`, 20, yPos);
+            yPos += 8;
+          }
+
+          return yPos + 10;
+        }
+
+        return 60;
+      };
+
+      let currentY = addHeader();
+
+      // Add entities section
+      if (quoteData.entities && quoteData.entities.length > 0) {
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text("Entities", 20, currentY);
+        currentY += 10;
+
+        quoteData.entities.forEach((entity) => {
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "normal");
+          doc.text(`• ${entity.name} (${entity.entityType})`, 25, currentY);
+          currentY += 6;
+        });
+
+        currentY += 10;
+      }
+
+      // Add services section (simplified - you may want to expand this)
+      if (quoteData.services && quoteData.services.length > 0) {
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text("Services", 20, currentY);
+        currentY += 10;
+
+        quoteData.services.forEach((service) => {
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "normal");
+          doc.text(`• ${service.serviceName}`, 25, currentY);
+          currentY += 6;
+        });
+
+        currentY += 10;
+      }
+
+      // Add total (if available)
+      if (quoteData.feesCharged) {
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text(`Total: $${quoteData.feesCharged.toFixed(2)}`, 20, currentY);
+      }
+
+      // Generate filename
+      const clientName =
+        quoteData.clientGroup || quoteData.contactPerson || "Client";
+      const filename = `Integritas_Proposal_${clientName.replace(
+        /[^a-zA-Z0-9]/g,
+        "_"
+      )}_${new Date().toISOString().split("T")[0]}.pdf`;
+
+      // Download the PDF
+      doc.save(filename);
+
+      // Update quote status to DOWNLOADED if it has an ID
+      if (quoteData.id) {
+        try {
+          await fetch(`/api/quotes/${quoteData.id}/status`, {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ status: "DOWNLOADED" }),
+          });
+        } catch (error) {
+          console.error("Failed to update quote status:", error);
+        }
+      }
+    } catch (error) {
+      console.error("Error generating PDF from data:", error);
+      toast.error("Failed to generate PDF. Please try again.");
+    }
   };
 
   const generateEmailContent = () => {
@@ -702,18 +900,18 @@ export default function SummaryCard() {
             </thead>
             <tbody>
               ${servicesHtml}
-              ${
-                discount.amount > 0
-                  ? `
-                <tr>
-                  <td colspan="2" style="padding: 8px; font-weight: bold; color: #e53e3e;">Discount Applied</td>
-                  <td style="padding: 8px; text-align: right; font-weight: bold; color: #e53e3e;">-$${discount.amount.toFixed(
-                    2
-                  )}</td>
+                              ${
+                                discount.amount > 0
+                                  ? `
+                  <tr>
+                    <td colspan="2" style="padding: 8px; font-weight: bold; color: #e53e3e;">Discount Applied</td>
+                   <td style="padding: 8px; text-align: right; font-weight: bold; color: #e53e3e;">-$${discount.amount.toFixed(
+                     2
+                   )}</td>
                 </tr>
               `
-                  : ""
-              }
+                                  : ""
+                              }
               <tr style="background-color: #f8f9fa; font-weight: bold; font-size: 16px;">
                 <td colspan="2" style="padding: 12px; border-top: 2px solid #2c5282;">TOTAL VALUE:</td>
                 <td style="padding: 12px; text-align: right; border-top: 2px solid #2c5282; color: #2c5282;">$${(
@@ -875,6 +1073,21 @@ export default function SummaryCard() {
             emailList.length > 1 ? "s" : ""
           }`,
         });
+
+        // Update quote status to SENT if we have a saved quote
+        if (currentQuoteId) {
+          try {
+            await fetch(`/api/quotes/${currentQuoteId}/status`, {
+              method: "PATCH",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ status: "SENT" }),
+            });
+          } catch (error) {
+            console.error("Error updating quote status:", error);
+          }
+        }
       } else {
         const errorMessage = responseData.details
           ? `${responseData.error}\n\nDetails: ${responseData.details}`
@@ -899,309 +1112,258 @@ export default function SummaryCard() {
   return (
     <ClientWrapper
       fallback={
-        <div className="fixed top-4 right-4 z-50" suppressHydrationWarning>
-          <Button
-            className="rounded-full p-2 bg-primary animate-pulse"
-            suppressHydrationWarning
-          >
-            <div
-              className="h-5 w-5 bg-muted rounded"
-              suppressHydrationWarning
-            />
-          </Button>
+        <div
+          className="p-2 h-full flex items-center justify-center"
+          suppressHydrationWarning
+        >
+          <div className="animate-spin h-6 w-6 border-2 border-blue-500 border-t-transparent rounded-full"></div>
         </div>
       }
     >
-      {/* Floating Toggle Button */}
-      <Button
-        onClick={handleToggleCollapse}
-        className={`fixed top-4 right-4 z-50 rounded-full p-2 ${
-          isCollapsed ? "bg-primary" : "bg-primary"
-        }`}
-        suppressHydrationWarning
-      >
-        {isCollapsed ? (
-          <ChevronLeftIcon className="h-5 w-5 text-red-400" />
-        ) : (
-          <ChevronRightIcon className="h-5 w-5 text-red-400" />
-        )}
-      </Button>
-
-      {/* Collapsible Sidebar */}
-      <AnimatePresence>
-        {!isCollapsed && (
-          <motion.div
-            key="sidebar"
-            initial={{ x: 300 }} // Start off-screen to the right
-            animate={{ x: 0 }} // Slide into view
-            exit={{ x: 300 }} // Slide out of view
-            transition={{ duration: 0.3 }}
-            className="fixed top-0 right-0 h-screen w-[300px] bg-background shadow-lg z-40 overflow-y-auto"
+      <div className="h-full overflow-y-auto p-2" suppressHydrationWarning>
+        <Card className="h-full" suppressHydrationWarning>
+          <CardHeader suppressHydrationWarning>
+            <div className="flex items-center justify-between">
+              <CardTitle suppressHydrationWarning>Estimate Summary</CardTitle>
+              {onToggleVisibility && (
+                <Button
+                  onClick={onToggleVisibility}
+                  variant="ghost"
+                  size="sm"
+                  title="Hide summary sidebar"
+                  className="hover:bg-gray-100"
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent
+            className="space-y-2 overflow-y-auto"
             suppressHydrationWarning
           >
-            <Card className="h-full" suppressHydrationWarning>
-              <CardHeader suppressHydrationWarning>
-                <CardTitle suppressHydrationWarning>Estimate Summary</CardTitle>
-              </CardHeader>
-              <CardContent
-                className="space-y-2 overflow-y-auto"
-                suppressHydrationWarning
-              >
-                {/* Client Information */}
-                {(clientInfo.clientGroup ||
-                  clientInfo.entities.some((e) => e.name)) && (
-                  <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                    <h3 className="font-semibold text-sm mb-2">
-                      Client Information
-                    </h3>
-                    {clientInfo.clientGroup && (
-                      <p className="text-xs mb-1">
-                        <strong>Group:</strong> {clientInfo.clientGroup}
-                      </p>
-                    )}
-                    {clientInfo.entities.map(
-                      (entity, index) =>
-                        entity.name && (
-                          <div key={entity.id} className="text-xs mb-3">
-                            <p className="mb-1">
-                              <strong>Entity {index + 1}:</strong>
-                            </p>
-                            <p className="ml-2 mb-1">
-                              {[
-                                entity.name,
-                                entity.entityType,
-                                entity.businessType,
-                              ]
-                                .filter(Boolean)
-                                .join(" | ")}
-                            </p>
-                            <p className="ml-2">
-                              Xero subscription:{" "}
-                              {entity.hasXeroFile ? "Yes" : "No"}
-                              {!entity.hasXeroFile &&
-                                entity.accountingSoftware &&
-                                ` | Current software: ${entity.accountingSoftware}`}
-                            </p>
-                          </div>
-                        )
-                    )}
-                  </div>
+            {/* Client Information */}
+            {(clientInfo.clientGroup ||
+              clientInfo.entities.some((e) => e.name)) && (
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg">
+                <h3 className="font-semibold text-sm mb-2">
+                  Client Information
+                </h3>
+                {clientInfo.clientGroup && (
+                  <p className="text-xs mb-1">
+                    <strong>Group:</strong> {clientInfo.clientGroup}
+                  </p>
                 )}
-
-                <ul className="space-y-2">
-                  {getValidSections(sections).map((section) => (
-                    <li key={section.id}>
-                      <h3 className="font-semibold">{section.name}</h3>
-                      <ul className="pl-4">
-                        {section.services.map((service) => {
-                          if (
-                            service.type === "withOptions" &&
-                            service.selectedOption &&
-                            service.quantity
-                          ) {
-                            const serviceOptions = getServiceOptions(
-                              section.id,
-                              service.id
-                            );
-                            const selectedOption = serviceOptions.find(
-                              (opt) => opt.value === service.selectedOption
-                            );
-                            if (!selectedOption) return null;
-
-                            // Use custom rate if enabled, otherwise use selected option rate
-                            const rate =
-                              service.useCustomRate &&
-                              service.customRate !== undefined
-                                ? service.customRate
-                                : selectedOption.rate;
-
-                            const totalAmount = rate * service.quantity;
-
-                            return (
-                              <li key={service.id} className="flex flex-col">
-                                <div className="flex justify-between">
-                                  <span>
-                                    {service.name} (
-                                    {service.useCustomRate
-                                      ? "Custom Rate"
-                                      : selectedOption.label}
-                                    )
-                                  </span>
-                                  <span>${totalAmount.toFixed(2)}</span>
-                                </div>
-                                <div className="text-sm text-gray-500 pl-4">
-                                  Rate: ${rate}/unit, Quantity:{" "}
-                                  {service.quantity}
-                                </div>
-                              </li>
-                            );
-                          } else if (
-                            service.type === "fixedCost" &&
-                            service.value !== undefined
-                          ) {
-                            return (
-                              <li key={service.id} className="flex flex-col">
-                                <div className="flex justify-between">
-                                  <span>{service.name}</span>
-                                  <span>${service.value.toFixed(2)}</span>
-                                </div>
-                              </li>
-                            );
-                          } else if (
-                            service.type === "manualInput" &&
-                            service.customDescription &&
-                            service.customAmount !== undefined &&
-                            service.customRate !== undefined
-                          ) {
-                            const totalAmount =
-                              service.customAmount * service.customRate;
-                            return (
-                              <li key={service.id} className="flex flex-col">
-                                <div className="flex justify-between">
-                                  <span>{service.name}</span>
-                                  <span>${totalAmount.toFixed(2)}</span>
-                                </div>
-                                <div className="text-sm text-gray-500 pl-4">
-                                  {service.customDescription} - Rate: $
-                                  {service.customRate.toFixed(0)}/unit, Amount:{" "}
-                                  {service.customAmount}
-                                </div>
-                              </li>
-                            );
-                          }
-                          return null;
-                        })}
-                      </ul>
-                    </li>
-                  ))}
-                </ul>
-
-                {/* Discount */}
-                {discount.amount > 0 && (
-                  <div className="mt-4">
-                    <h3 className="font-semibold mb-2">Discount</h3>
-                    <div className="flex justify-between text-sm text-orange-600">
-                      <span className="truncate pr-2">
-                        {discount.description || "Discount Applied"}
-                      </span>
-                      <span>-${discount.amount.toFixed(2)}</span>
-                    </div>
-                  </div>
+                {clientInfo.entities.map(
+                  (entity, index) =>
+                    entity.name && (
+                      <div key={entity.id} className="text-xs mb-3">
+                        <p className="mb-1">
+                          <strong>Entity {index + 1}:</strong>
+                        </p>
+                        <p className="ml-2 mb-1">
+                          {[entity.name, entity.entityType, entity.businessType]
+                            .filter(Boolean)
+                            .join(" | ")}
+                        </p>
+                        <p className="ml-2">
+                          Xero subscription: {entity.hasXeroFile ? "Yes" : "No"}
+                          {!entity.hasXeroFile &&
+                            entity.accountingSoftware &&
+                            ` | Current software: ${entity.accountingSoftware}`}
+                        </p>
+                      </div>
+                    )
                 )}
-              </CardContent>
-              <CardFooter className="flex-col space-y-3">
-                <div className="flex justify-between w-full text-lg font-semibold">
-                  <span>Total Value</span>
-                  <span>${(total || 0).toFixed(2)}</span>
-                </div>
+              </div>
+            )}
 
-                {/* Fees Charged Section */}
-                <div className="w-full flex items-center space-x-3">
-                  <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
-                    Fees Charged
-                  </label>
-                  {mounted && (
-                    <Input
-                      type="number"
-                      placeholder=""
-                      value={feesCharged || ""}
-                      onChange={(e) =>
-                        updateFeesCharged(Number(e.target.value) || 0)
+            <ul className="space-y-2">
+              {getValidSections(sections).map((section) => (
+                <li key={section.id}>
+                  <h3 className="font-semibold">{section.name}</h3>
+                  <ul className="pl-4">
+                    {section.services.map((service) => {
+                      if (
+                        service.type === "withOptions" &&
+                        service.selectedOption &&
+                        service.quantity
+                      ) {
+                        const serviceOptions = getServiceOptions(
+                          section.id,
+                          service.id
+                        );
+                        const selectedOption = serviceOptions.find(
+                          (opt) => opt.value === service.selectedOption
+                        );
+                        if (!selectedOption) return null;
+
+                        // Use custom rate if enabled, otherwise use selected option rate
+                        const rate =
+                          service.useCustomRate &&
+                          service.customRate !== undefined
+                            ? service.customRate
+                            : selectedOption.rate;
+
+                        const totalAmount = rate * service.quantity;
+
+                        return (
+                          <li key={service.id} className="flex flex-col">
+                            <div className="flex justify-between">
+                              <span>
+                                {service.name} (
+                                {service.useCustomRate
+                                  ? "Custom Rate"
+                                  : selectedOption.label}
+                                )
+                              </span>
+                              <span>${totalAmount.toFixed(2)}</span>
+                            </div>
+                            <div className="text-sm text-gray-500 pl-4">
+                              Rate: ${rate}/unit, Quantity: {service.quantity}
+                            </div>
+                          </li>
+                        );
+                      } else if (
+                        service.type === "fixedCost" &&
+                        service.value !== undefined
+                      ) {
+                        return (
+                          <li key={service.id} className="flex flex-col">
+                            <div className="flex justify-between">
+                              <span>{service.name}</span>
+                              <span>${service.value.toFixed(2)}</span>
+                            </div>
+                          </li>
+                        );
+                      } else if (
+                        service.type === "manualInput" &&
+                        service.customDescription &&
+                        service.customAmount !== undefined &&
+                        service.customRate !== undefined
+                      ) {
+                        const totalAmount =
+                          service.customAmount * service.customRate;
+                        return (
+                          <li key={service.id} className="flex flex-col">
+                            <div className="flex justify-between">
+                              <span>{service.name}</span>
+                              <span>${totalAmount.toFixed(2)}</span>
+                            </div>
+                            <div className="text-sm text-gray-500 pl-4">
+                              {service.customDescription} - Rate: $
+                              {service.customRate.toFixed(0)}/unit, Amount:{" "}
+                              {service.customAmount}
+                            </div>
+                          </li>
+                        );
                       }
-                      suppressHydrationWarning
-                      className="flex-1"
-                    />
-                  )}
+                      return null;
+                    })}
+                  </ul>
+                </li>
+              ))}
+            </ul>
+
+            {/* Discount */}
+            {discount.amount > 0 && (
+              <div className="mt-4">
+                <h3 className="font-semibold mb-2">Discount</h3>
+                <div className="flex justify-between text-sm text-orange-600">
+                  <span className="truncate pr-2">
+                    {discount.description || "Discount Applied"}
+                  </span>
+                  <span>-${discount.amount.toFixed(2)}</span>
                 </div>
+              </div>
+            )}
+          </CardContent>
+          <CardFooter className="flex-col space-y-3">
+            <div className="flex justify-between w-full text-lg font-semibold">
+              <span>Total Value</span>
+              <span>${(total || 0).toFixed(2)}</span>
+            </div>
 
-                {/* Divider */}
-                <div className="w-full border-t border-gray-200 my-2"></div>
+            {/* Fees Charged Section */}
+            <div className="w-full flex items-center space-x-3">
+              <label className="text-sm font-medium text-gray-700 whitespace-nowrap">
+                Fees Charged
+              </label>
+              {mounted && (
+                <Input
+                  type="number"
+                  placeholder=""
+                  value={feesCharged || ""}
+                  onChange={(e) =>
+                    updateFeesCharged(Number(e.target.value) || 0)
+                  }
+                  suppressHydrationWarning
+                  className="flex-1"
+                />
+              )}
+            </div>
 
-                {/* Download PDF Button */}
-                <Button onClick={handleDownloadPDF} className="w-full">
-                  Download PDF
-                </Button>
+            {/* Divider */}
+            <div className="w-full border-t border-gray-200 my-2"></div>
 
-                {/* Extra Space */}
-                <div className="py-2"></div>
+            {/* Save Quote Button */}
+            <Button
+              onClick={handleSaveQuote}
+              variant="success"
+              className="w-full mb-2"
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <>
+                  <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                  {currentQuoteId ? "Updating..." : "Saving..."}
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 mr-2" />
+                  {currentQuoteId ? "Update Quote" : "Save Quote"}
+                </>
+              )}
+            </Button>
 
-                {/* Email Section */}
-                <div className="w-full space-y-2">
-                  {mounted && (
-                    <Input
-                      type="text"
-                      placeholder="Enter multiple emails (comma separated)"
-                      value={emails}
-                      onChange={(e) => setEmails(e.target.value)}
-                      suppressHydrationWarning
-                    />
-                  )}
-                  <Button
-                    onClick={handleEmailEstimate}
-                    variant="outline"
-                    className="w-full"
-                    disabled={isGeneratingEmail}
-                  >
-                    {isGeneratingEmail ? (
-                      <>
-                        <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
-                        Sending Email...
-                      </>
-                    ) : (
-                      "Email Estimate"
-                    )}
-                  </Button>
-                </div>
-              </CardFooter>
-            </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            {/* Download PDF Button */}
+            <Button onClick={handleDownloadPDF} className="w-full">
+              Download PDF
+            </Button>
+
+            {/* Extra Space */}
+            <div className="py-2"></div>
+
+            {/* Email Section */}
+            <div className="w-full space-y-2">
+              {mounted && (
+                <Input
+                  type="text"
+                  placeholder="Enter multiple emails (comma separated)"
+                  value={emails}
+                  onChange={(e) => setEmails(e.target.value)}
+                  suppressHydrationWarning
+                />
+              )}
+              <Button
+                onClick={handleEmailEstimate}
+                variant="outline"
+                className="w-full"
+                disabled={isGeneratingEmail}
+              >
+                {isGeneratingEmail ? (
+                  <>
+                    <div className="animate-spin h-4 w-4 border-2 border-current border-t-transparent rounded-full mr-2" />
+                    Sending Email...
+                  </>
+                ) : (
+                  "Email Estimate"
+                )}
+              </Button>
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
     </ClientWrapper>
-  );
-}
-
-// Example Icons (replace with your actual icons)
-function ChevronLeftIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <>
-      <p>Show summary</p>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        {...props}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M15 19l-7-7 7-7"
-        />
-      </svg>
-    </>
-  );
-}
-
-function ChevronRightIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <>
-      <p>Hide</p>
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        {...props}
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M9 19l-7-7 7-7"
-        />
-      </svg>
-    </>
   );
 }
