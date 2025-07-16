@@ -3,6 +3,11 @@ import { NextRequest, NextResponse } from "next/server";
 import type { EstimationStore } from "@/lib/store";
 import { prisma } from "@/lib/db";
 
+// Type for database errors that may have a code property
+interface DatabaseError extends Error {
+  code?: string;
+}
+
 // GET /api/quotes - List all quotes
 export async function GET() {
   try {
@@ -20,16 +25,38 @@ export async function GET() {
   } catch (error) {
     console.error("Error fetching quotes:", error);
 
+    // Enhanced error logging for diagnostics
+    console.error("Database URL present:", !!process.env.DATABASE_URL);
+    console.error("Node environment:", process.env.NODE_ENV);
+
     // Check if it's a database connection error
     if (error instanceof Error) {
+      console.error("Error details:", {
+        message: error.message,
+        name: error.name,
+        stack: error.stack?.substring(0, 500),
+        code: (error as DatabaseError).code,
+      });
+
       if (
         error.message.includes("connect") ||
-        error.message.includes("database")
+        error.message.includes("database") ||
+        error.message.includes("ENOTFOUND") ||
+        error.message.includes("timeout") ||
+        (error as DatabaseError).code === "P1001" || // Prisma connection error
+        (error as DatabaseError).code === "P1008" || // Operations timed out
+        (error as DatabaseError).code === "P1017" // Server has closed the connection
       ) {
         return NextResponse.json(
           {
             error:
               "Database connection failed. Please check your database configuration.",
+            debug: {
+              message: error.message,
+              code: (error as DatabaseError).code,
+              hasDbUrl: !!process.env.DATABASE_URL,
+              environment: process.env.NODE_ENV,
+            },
           },
           { status: 503 }
         );
@@ -40,6 +67,10 @@ export async function GET() {
       {
         error: "Failed to fetch quotes",
         details: error instanceof Error ? error.message : "Unknown error",
+        debug: {
+          hasDbUrl: !!process.env.DATABASE_URL,
+          environment: process.env.NODE_ENV,
+        },
       },
       { status: 500 }
     );
