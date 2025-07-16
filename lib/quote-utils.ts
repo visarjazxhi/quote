@@ -178,32 +178,16 @@ export async function loadQuoteFromDatabase(quoteId: string): Promise<void> {
     store.updateClientAddress(storeData.clientInfo.address);
     store.updateContactPerson(storeData.clientInfo.contactPerson);
 
-    // Clear existing entities and add new ones
-    const currentEntities = [...store.clientInfo.entities];
-    currentEntities.forEach((entity) => store.removeEntity(entity.id));
+    // Set entities directly with loaded data, creating new IDs
+    const entitiesWithNewIds = storeData.clientInfo.entities.map(
+      (entityData, index) => ({
+        ...entityData,
+        id: `loaded-${Date.now()}-${index}`, // Generate unique IDs for loaded entities
+        accountingSoftware: entityData.accountingSoftware || "", // Ensure accountingSoftware is never undefined
+      })
+    );
 
-    storeData.clientInfo.entities.forEach(() => {
-      store.addEntity();
-    });
-
-    // Update entity data
-    const newEntities = store.clientInfo.entities;
-    storeData.clientInfo.entities.forEach((entityData, index) => {
-      if (newEntities[index]) {
-        const entityId = newEntities[index].id;
-        store.updateEntity(entityId, "name", entityData.name);
-        store.updateEntity(entityId, "entityType", entityData.entityType);
-        store.updateEntity(entityId, "businessType", entityData.businessType);
-        store.updateEntity(entityId, "hasXeroFile", entityData.hasXeroFile);
-        if (entityData.accountingSoftware) {
-          store.updateEntity(
-            entityId,
-            "accountingSoftware",
-            entityData.accountingSoftware
-          );
-        }
-      }
-    });
+    store.setEntities(entitiesWithNewIds);
   }
 
   if (storeData.discount) {

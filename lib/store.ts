@@ -146,6 +146,7 @@ export interface EstimationStore {
     field: keyof Entity,
     value: string | boolean
   ) => void;
+  setEntities: (entities: Entity[]) => void;
 
   updateDiscount: (field: keyof Discount, value: string | number) => void;
   updateFeesCharged: (amount: number) => void;
@@ -161,7 +162,9 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
     contactPerson: "",
     entities: [
       {
-        id: "1",
+        id: `entity-initial-${Date.now()}-${Math.random()
+          .toString(36)
+          .substr(2, 9)}`,
         name: "",
         entityType: "",
         businessType: "",
@@ -181,29 +184,11 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
       name: "Admin Services",
       services: [
         {
-          id: "client-id",
-          name: "Client ID",
-          description: "Managing and assigning client identifiers.",
-          type: "withOptions",
-          // Uses standard rates by default
-        },
-        {
-          id: "xero-setup",
-          name: "Set up on XPM",
-          description: "Setting up client accounts on Xero Practice Manager.",
-          type: "withOptions",
-        },
-        {
-          id: "ato-nomination",
-          name: "ATO Nomination",
-          description: "Nomination on ATO as the client's tax agent.",
-          type: "withOptions",
-        },
-        {
-          id: "asic-onboarding",
-          name: "ASIC Onboarding",
-          description: "Onboarding clients with the ASIC",
-          type: "withOptions",
+          id: "compliance-onboarding",
+          name: "Compliance Onboarding",
+          description:
+            "Fully set up across key platforms like Xero, ATO, and ASIC. This includes Client ID setup, XPM account creation, ATO tax agent nomination, and ASIC onboarding",
+          type: "manualInput",
         },
         {
           id: "engagement",
@@ -725,12 +710,22 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
                         ...service,
                         customDescription:
                           service.customDescription === undefined
-                            ? ""
+                            ? service.id === "compliance-onboarding"
+                              ? "Compliance Onboarding Package"
+                              : ""
                             : undefined,
                         customAmount:
-                          service.customAmount === undefined ? 0 : undefined,
+                          service.customAmount === undefined
+                            ? service.id === "compliance-onboarding"
+                              ? 1
+                              : 0
+                            : undefined,
                         customRate:
-                          service.customRate === undefined ? 0 : undefined,
+                          service.customRate === undefined
+                            ? service.id === "compliance-onboarding"
+                              ? 600
+                              : 0
+                            : undefined,
                       }
                     : service.type === "rnD"
                     ? {
@@ -960,7 +955,9 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
         entities: [
           ...state.clientInfo.entities,
           {
-            id: Date.now().toString(),
+            id: `entity-${Date.now()}-${Math.random()
+              .toString(36)
+              .substr(2, 9)}`,
             name: "",
             entityType: "",
             businessType: "",
@@ -988,6 +985,14 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
         entities: state.clientInfo.entities.map((entity) =>
           entity.id === entityId ? { ...entity, [field]: value } : entity
         ),
+      },
+    })),
+
+  setEntities: (entities) =>
+    set((state) => ({
+      clientInfo: {
+        ...state.clientInfo,
+        entities,
       },
     })),
 

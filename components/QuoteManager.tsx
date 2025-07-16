@@ -182,16 +182,11 @@ export const QuoteManager: React.FC = () => {
   }, [resetStore]);
 
   const handleQuoteSaved = useCallback(async (quoteId: string) => {
-    console.log("handleQuoteSaved called with quoteId:", quoteId);
     setSelectedQuoteId(quoteId);
 
     // Refresh the quote list to show the new/updated quote
     if (quoteListRef.current) {
-      console.log("Refreshing quote list...");
       await quoteListRef.current.refreshQuotes();
-      console.log("Quote list refreshed");
-    } else {
-      console.log("quoteListRef.current is null");
     }
 
     // Form is cleared in SummaryCard after successful save
@@ -213,32 +208,6 @@ export const QuoteManager: React.FC = () => {
     },
     [selectedQuoteId, resetStore]
   );
-
-  const handleDownloadPDF = useCallback(async (quote: Quote) => {
-    try {
-      setIsLoading(true);
-
-      // Load quote data temporarily without affecting the current form
-      const response = await fetch(`/api/quotes/${quote.id}`);
-      if (!response.ok) {
-        throw new Error("Failed to fetch quote data");
-      }
-
-      const quoteData = await response.json();
-
-      // Generate PDF directly with the fetched data
-      // We'll create a temporary PDF generation without loading into store
-      const downloadEvent = new CustomEvent("downloadPDFFromData", {
-        detail: { quoteData },
-      });
-      window.dispatchEvent(downloadEvent);
-    } catch (error) {
-      console.error("Error downloading PDF:", error);
-      toast.error("Failed to download PDF. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
 
   return (
     <div className="relative h-screen bg-gray-100">
@@ -266,7 +235,6 @@ export const QuoteManager: React.FC = () => {
             onSelectQuote={handleSelectQuote}
             onNewQuote={handleNewQuote}
             onDeleteComplete={handleDeleteComplete}
-            onDownloadPDF={handleDownloadPDF}
             onToggleVisibility={handleQuoteListToggle}
             selectedQuoteId={selectedQuoteId}
           />
@@ -341,7 +309,6 @@ export const QuoteManager: React.FC = () => {
             onSelectQuote={handleSelectQuote}
             onNewQuote={handleNewQuote}
             onDeleteComplete={handleDeleteComplete}
-            onDownloadPDF={handleDownloadPDF}
             onToggleVisibility={handleQuoteListToggle}
             selectedQuoteId={selectedQuoteId}
           />

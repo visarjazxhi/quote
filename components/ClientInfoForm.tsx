@@ -19,6 +19,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import ClientWrapper from "./ClientWrapper";
+import GooglePlacesAutocomplete from "./GooglePlacesAutocomplete";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
@@ -51,6 +52,13 @@ export default function ClientInfoForm() {
     value: string | boolean
   ) => {
     updateEntity(id, field as keyof import("@/lib/store").Entity, value);
+
+    // Auto-handle Individual entity type
+    if (field === "entityType" && value === "Individual") {
+      // For individuals, automatically set hasXeroFile to false and accountingSoftware to "N/A"
+      updateEntity(id, "hasXeroFile", false);
+      updateEntity(id, "accountingSoftware", "N/A");
+    }
   };
 
   const handleAddEntity = () => {
@@ -103,7 +111,10 @@ export default function ClientInfoForm() {
         </CardHeader>
         <CardContent className="space-y-6" suppressHydrationWarning>
           {/* Client Information - Single Row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4" suppressHydrationWarning>
+          <div
+            className="grid grid-cols-1 md:grid-cols-3 gap-4"
+            suppressHydrationWarning
+          >
             {/* Client Group */}
             <div className="space-y-2" suppressHydrationWarning>
               <Label htmlFor="client-group" suppressHydrationWarning>
@@ -123,12 +134,11 @@ export default function ClientInfoForm() {
               <Label htmlFor="client-address" suppressHydrationWarning>
                 Address
               </Label>
-              <Input
+              <GooglePlacesAutocomplete
                 id="client-address"
                 placeholder="Enter client address"
                 value={clientInfo.address}
-                onChange={(e) => updateClientAddress(e.target.value)}
-                suppressHydrationWarning
+                onChange={updateClientAddress}
               />
             </div>
 
@@ -296,93 +306,146 @@ export default function ClientInfoForm() {
                       className="flex flex-col sm:flex-row sm:items-center gap-4"
                       suppressHydrationWarning
                     >
-                      <div
-                        className="flex items-center space-x-4"
-                        suppressHydrationWarning
-                      >
+                      {entity.entityType === "Individual" ? (
+                        // For Individual entities, show No checked with N/A description
                         <div
-                          className="flex items-center space-x-2"
+                          className="flex items-center space-x-4"
                           suppressHydrationWarning
                         >
-                          <Checkbox
-                            id={`xero-yes-${entity.id}`}
-                            checked={entity.hasXeroFile === true}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                handleEntityUpdate(
-                                  entity.id,
-                                  "hasXeroFile",
-                                  true
-                                );
-                              }
-                            }}
-                            suppressHydrationWarning
-                          />
-                          <Label
-                            htmlFor={`xero-yes-${entity.id}`}
-                            className="text-sm"
+                          <div
+                            className="flex items-center space-x-2"
                             suppressHydrationWarning
                           >
-                            Yes
-                          </Label>
-                        </div>
+                            <Checkbox
+                              id={`xero-yes-${entity.id}`}
+                              checked={false}
+                              disabled={true}
+                              suppressHydrationWarning
+                            />
+                            <Label
+                              htmlFor={`xero-yes-${entity.id}`}
+                              className="text-sm text-gray-400"
+                              suppressHydrationWarning
+                            >
+                              Yes
+                            </Label>
+                          </div>
 
-                        <div
-                          className="flex items-center space-x-2"
-                          suppressHydrationWarning
-                        >
-                          <Checkbox
-                            id={`xero-no-${entity.id}`}
-                            checked={entity.hasXeroFile === false}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                handleEntityUpdate(
-                                  entity.id,
-                                  "hasXeroFile",
-                                  false
-                                );
-                              }
-                            }}
-                            suppressHydrationWarning
-                          />
-                          <Label
-                            htmlFor={`xero-no-${entity.id}`}
-                            className="text-sm"
+                          <div
+                            className="flex items-center space-x-2"
                             suppressHydrationWarning
                           >
-                            No
-                          </Label>
-                        </div>
-                      </div>
+                            <Checkbox
+                              id={`xero-no-${entity.id}`}
+                              checked={true}
+                              disabled={true}
+                              suppressHydrationWarning
+                            />
+                            <Label
+                              htmlFor={`xero-no-${entity.id}`}
+                              className="text-sm"
+                              suppressHydrationWarning
+                            >
+                              No
+                            </Label>
+                          </div>
 
-                      {entity.hasXeroFile === false && (
+                          <span className="text-sm text-gray-600 italic">
+                            (N/A - Individual entities typically don&apos;t use
+                            Xero)
+                          </span>
+                        </div>
+                      ) : (
+                        // For other entity types, show Yes/No options
                         <div
-                          className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2 flex-1"
+                          className="flex items-center space-x-4"
                           suppressHydrationWarning
                         >
-                          <Label
-                            htmlFor={`accounting-software-${entity.id}`}
-                            className="text-sm whitespace-nowrap"
+                          <div
+                            className="flex items-center space-x-2"
                             suppressHydrationWarning
                           >
-                            Current Accounting Software:
-                          </Label>
-                          <Input
-                            id={`accounting-software-${entity.id}`}
-                            placeholder="Enter current software"
-                            value={entity.accountingSoftware ?? ""}
-                            onChange={(e) =>
-                              handleEntityUpdate(
-                                entity.id,
-                                "accountingSoftware",
-                                e.target.value
-                              )
-                            }
-                            className="flex-1"
+                            <Checkbox
+                              id={`xero-yes-${entity.id}`}
+                              checked={entity.hasXeroFile === true}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  handleEntityUpdate(
+                                    entity.id,
+                                    "hasXeroFile",
+                                    true
+                                  );
+                                }
+                              }}
+                              suppressHydrationWarning
+                            />
+                            <Label
+                              htmlFor={`xero-yes-${entity.id}`}
+                              className="text-sm"
+                              suppressHydrationWarning
+                            >
+                              Yes
+                            </Label>
+                          </div>
+
+                          <div
+                            className="flex items-center space-x-2"
                             suppressHydrationWarning
-                          />
+                          >
+                            <Checkbox
+                              id={`xero-no-${entity.id}`}
+                              checked={entity.hasXeroFile === false}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  handleEntityUpdate(
+                                    entity.id,
+                                    "hasXeroFile",
+                                    false
+                                  );
+                                }
+                              }}
+                              suppressHydrationWarning
+                            />
+                            <Label
+                              htmlFor={`xero-no-${entity.id}`}
+                              className="text-sm"
+                              suppressHydrationWarning
+                            >
+                              No
+                            </Label>
+                          </div>
                         </div>
                       )}
+
+                      {entity.hasXeroFile === false &&
+                        entity.entityType !== "Individual" && (
+                          <div
+                            className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2 flex-1"
+                            suppressHydrationWarning
+                          >
+                            <Label
+                              htmlFor={`accounting-software-${entity.id}`}
+                              className="text-sm whitespace-nowrap"
+                              suppressHydrationWarning
+                            >
+                              Current Accounting Software:
+                            </Label>
+                            <Input
+                              id={`accounting-software-${entity.id}`}
+                              placeholder="Enter current software"
+                              value={entity.accountingSoftware ?? ""}
+                              onChange={(e) =>
+                                handleEntityUpdate(
+                                  entity.id,
+                                  "accountingSoftware",
+                                  e.target.value
+                                )
+                              }
+                              className="flex-1"
+                              suppressHydrationWarning
+                            />
+                          </div>
+                        )}
                     </div>
                   </div>
                 </div>

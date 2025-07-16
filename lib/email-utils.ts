@@ -1,5 +1,5 @@
-import mailtoLink from "mailto-link";
 import { EmailTemplate } from "@/types/email-template";
+import mailtoLink from "mailto-link";
 
 /**
  * Opens the user's default email client with a properly URL-encoded subject & body.
@@ -22,8 +22,7 @@ export function generateEmail(template: EmailTemplate) {
   if (attachments.length > 0) {
     console.log(
       "Note: The following attachments need to be manually added to the email:",
-      attachments.map((a) => a.name).join(", "), "Email Body:", body
-
+      attachments.map((a) => a.name).join(", ")
     );
   }
 }

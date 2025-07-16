@@ -19,8 +19,28 @@ export async function GET() {
     return NextResponse.json(quotes);
   } catch (error) {
     console.error("Error fetching quotes:", error);
+
+    // Check if it's a database connection error
+    if (error instanceof Error) {
+      if (
+        error.message.includes("connect") ||
+        error.message.includes("database")
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Database connection failed. Please check your database configuration.",
+          },
+          { status: 503 }
+        );
+      }
+    }
+
     return NextResponse.json(
-      { error: "Failed to fetch quotes" },
+      {
+        error: "Failed to fetch quotes",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
@@ -119,8 +139,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(quote, { status: 201 });
   } catch (error) {
     console.error("Error creating quote:", error);
+
+    // Check if it's a database connection error
+    if (error instanceof Error) {
+      if (
+        error.message.includes("connect") ||
+        error.message.includes("database")
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Database connection failed. Please check your database configuration.",
+          },
+          { status: 503 }
+        );
+      }
+    }
+
     return NextResponse.json(
-      { error: "Failed to create quote" },
+      {
+        error: "Failed to create quote",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

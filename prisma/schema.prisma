@@ -61,7 +61,7 @@ model QuoteService {
 
   // For withOptions services
   selectedOption String?
-  quantity       Int?
+  quantity       Float?
   customRate     Float?
   useCustomRate  Boolean @default(false)
 

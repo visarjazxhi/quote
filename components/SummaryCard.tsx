@@ -136,9 +136,6 @@ export default function SummaryCard({
       // Small delay to ensure database operation is complete
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      console.log("Quote saved with ID:", quoteId);
-      console.log("Calling onQuoteSaved callback:", !!onQuoteSaved);
-
       if (onQuoteSaved) {
         await onQuoteSaved(quoteId);
       }
@@ -1092,13 +1089,6 @@ export default function SummaryCard({
         );
     }
 
-    console.log("📧 Email processing:", {
-      provided: emailsToSend,
-      fallback: emails,
-      final: emailList,
-      count: emailList.length,
-    });
-
     if (emailList.length === 0) {
       toast.error("Please add at least one valid email address");
       return;
@@ -1123,7 +1113,6 @@ export default function SummaryCard({
         description: "Converting PDF to attachment",
       });
 
-      console.log("🔄 Converting PDF to base64...");
       const pdfBase64 = doc.output("datauristring");
 
       // Update progress
@@ -1132,7 +1121,6 @@ export default function SummaryCard({
         description: "Generating email content",
       });
 
-      console.log("🔄 Generating email content...");
       const emailContent = generateEmailContent();
 
       const clientName =
@@ -1151,7 +1139,6 @@ export default function SummaryCard({
         }`,
       });
 
-      console.log("🔄 Sending email...");
       const response = await fetch("/api/send-email", {
         method: "POST",
         headers: {

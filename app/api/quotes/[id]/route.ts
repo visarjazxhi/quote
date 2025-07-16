@@ -7,6 +7,37 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
+// HEAD /api/quotes/[id] - Check if a quote exists (used by QuoteManager)
+export async function HEAD(request: NextRequest, { params }: RouteParams) {
+  try {
+    const { id } = await params;
+    const quote = await prisma.quote.findUnique({
+      where: { id },
+      select: { id: true }, // Only select the ID to minimize data transfer
+    });
+
+    if (!quote) {
+      return new Response(null, { status: 404 });
+    }
+
+    return new Response(null, { status: 200 });
+  } catch (error) {
+    console.error("Error checking quote existence:", error);
+
+    // Check if it's a database connection error
+    if (error instanceof Error) {
+      if (
+        error.message.includes("connect") ||
+        error.message.includes("database")
+      ) {
+        return new Response(null, { status: 503 });
+      }
+    }
+
+    return new Response(null, { status: 500 });
+  }
+}
+
 // GET /api/quotes/[id] - Get a specific quote
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
@@ -26,8 +57,28 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json(quote);
   } catch (error) {
     console.error("Error fetching quote:", error);
+
+    // Check if it's a database connection error
+    if (error instanceof Error) {
+      if (
+        error.message.includes("connect") ||
+        error.message.includes("database")
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Database connection failed. Please check your database configuration.",
+          },
+          { status: 503 }
+        );
+      }
+    }
+
     return NextResponse.json(
-      { error: "Failed to fetch quote" },
+      {
+        error: "Failed to fetch quote",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
@@ -136,8 +187,28 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json(quote);
   } catch (error) {
     console.error("Error updating quote:", error);
+
+    // Check if it's a database connection error
+    if (error instanceof Error) {
+      if (
+        error.message.includes("connect") ||
+        error.message.includes("database")
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Database connection failed. Please check your database configuration.",
+          },
+          { status: 503 }
+        );
+      }
+    }
+
     return NextResponse.json(
-      { error: "Failed to update quote" },
+      {
+        error: "Failed to update quote",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
@@ -154,8 +225,28 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ message: "Quote deleted successfully" });
   } catch (error) {
     console.error("Error deleting quote:", error);
+
+    // Check if it's a database connection error
+    if (error instanceof Error) {
+      if (
+        error.message.includes("connect") ||
+        error.message.includes("database")
+      ) {
+        return NextResponse.json(
+          {
+            error:
+              "Database connection failed. Please check your database configuration.",
+          },
+          { status: 503 }
+        );
+      }
+    }
+
     return NextResponse.json(
-      { error: "Failed to delete quote" },
+      {
+        error: "Failed to delete quote",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

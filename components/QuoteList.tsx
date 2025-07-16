@@ -13,7 +13,6 @@ import {
 } from "./ui/alert-dialog";
 import {
   ChevronLeft,
-  Download,
   Eye,
   Plus,
   RefreshCw,
@@ -57,7 +56,6 @@ interface QuoteListProps {
   onSelectQuote: (quote: Quote) => void;
   onNewQuote: () => void;
   onDeleteComplete?: (deletedQuoteId: string) => void;
-  onDownloadPDF?: (quote: Quote) => void;
   onToggleVisibility?: () => void;
   selectedQuoteId?: string;
 }
@@ -71,7 +69,6 @@ export const QuoteList = React.forwardRef<
       onSelectQuote,
       onNewQuote,
       onDeleteComplete,
-      onDownloadPDF,
       onToggleVisibility,
       selectedQuoteId,
     },
@@ -86,14 +83,12 @@ export const QuoteList = React.forwardRef<
 
     const fetchQuotes = async () => {
       try {
-        console.log("fetchQuotes called - fetching quotes from API...");
         setLoading(true);
         const response = await fetch("/api/quotes");
         if (!response.ok) {
           throw new Error("Failed to fetch quotes");
         }
         const data = await response.json();
-        console.log("fetchQuotes - received data:", data.length, "quotes");
         setQuotes(data);
         setFilteredQuotes(data);
         setError(null);
@@ -171,17 +166,6 @@ export const QuoteList = React.forwardRef<
           err instanceof Error ? err.message : "Failed to delete quote";
         setError(errorMessage);
         console.error("Delete error:", err);
-      }
-    };
-
-    const handleDownloadPDF = async (quote: Quote, event: React.MouseEvent) => {
-      event.stopPropagation(); // Prevent card click
-      try {
-        if (onDownloadPDF) {
-          await onDownloadPDF(quote);
-        }
-      } catch (error) {
-        console.error("Error downloading PDF:", error);
       }
     };
 
@@ -424,17 +408,6 @@ export const QuoteList = React.forwardRef<
                         </AlertDialogContent>
                       </AlertDialog>
                     </div>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 w-7 p-0 hover:bg-green-50"
-                      onClick={(e) => handleDownloadPDF(quote, e)}
-                      title="Download PDF"
-                      disabled={isSelecting}
-                    >
-                      <Download className="h-3 w-3 text-green-600" />
-                    </Button>
                   </div>
                 </div>
               </div>
