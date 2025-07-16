@@ -306,11 +306,11 @@ export const QuoteList = React.forwardRef<
               >
                 <div className="p-4">
                   {/* Header */}
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="font-semibold text-sm text-gray-900 line-clamp-1">
+                  <div className="mb-3">
+                    <h3 className="font-semibold text-sm text-gray-900 line-clamp-1 mb-1">
                       {quote.clientGroup || "Unnamed Quote"}
                     </h3>
-                    <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                    <span className="text-xs text-gray-500">
                       {formatDate(quote.updatedAt)}
                     </span>
                   </div>
