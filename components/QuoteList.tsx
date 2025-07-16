@@ -307,12 +307,14 @@ export const QuoteList = React.forwardRef<
                 <div className="p-4">
                   {/* Header */}
                   <div className="mb-3">
-                    <h3 className="font-semibold text-sm text-gray-900 line-clamp-1 mb-1">
+                    <h3 className="font-semibold text-sm text-gray-900 line-clamp-1">
                       {quote.clientGroup || "Unnamed Quote"}
                     </h3>
-                    <span className="text-xs text-gray-500">
-                      {formatDate(quote.updatedAt)}
-                    </span>
+                    <div className="mt-1">
+                      <span className="text-xs text-gray-500">
+                        {formatDate(quote.updatedAt)}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Contact Person */}
