@@ -36,6 +36,8 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
     updateFixedCost,
     updateManualInput,
     updateRnDExpenses,
+    updateFeedsRange,
+    updateEmployeesRange,
     getServiceOptions,
   } = useEstimationStore();
 
@@ -99,6 +101,39 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
   const handleRnDExpensesChange = (expenses: number) => {
     updateRnDExpenses(sectionId, service.id, expenses);
   };
+
+  const handleFeedsRangeChange = (value: string) => {
+    updateFeedsRange(sectionId, service.id, value);
+  };
+
+  const handleEmployeesRangeChange = (value: string) => {
+    updateEmployeesRange(sectionId, service.id, value);
+  };
+
+  const isBookkeepingService = sectionId === "Bookkeeping ";
+  const isEmployeeRangeService =
+    isBookkeepingService &&
+    (service.id === "payroll-process-aba-file" || service.id === "stp-filing");
+
+  // Only "Data Entry and Bank Coding and Reconciliation" should have feeds dropdown
+  const isFeedsRangeService =
+    isBookkeepingService &&
+    service.id === "data-entry-bank-coding-reconciliation";
+
+  const feedsRangeOptions = [
+    { value: "1-200", label: "1-200 feeds" },
+    { value: "201-400", label: "201-400 feeds" },
+    { value: "401-600", label: "401-600 feeds" },
+    { value: "601-800", label: "601-800 feeds" },
+    { value: "801-1000+", label: "801-1000+ feeds" },
+  ];
+
+  const employeesRangeOptions = [
+    { value: "1-3", label: "1-3 employees" },
+    { value: "3-5", label: "3-5 employees" },
+    { value: "5-10", label: "5-10 employees" },
+    { value: "10-20+", label: "10-20+ employees" },
+  ];
 
   const getManualInputValue = (
     field: "customDescription" | "customAmount" | "customRate"
@@ -228,11 +263,13 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
                       <SelectValue placeholder="Choose rate level" />
                     </SelectTrigger>
                     <SelectContent>
-                      {rateOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label} - ${option.rate}/hour
-                        </SelectItem>
-                      ))}
+                      {getServiceOptions(sectionId, service.id).map(
+                        (option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label} - ${option.rate}/hour
+                          </SelectItem>
+                        )
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -255,58 +292,106 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
                 </div>
               )}
 
-              {/* Dynamic Fields Container */}
-              <div className="min-h-[80px]">
-                {/* Custom Rate Input */}
-                {selectedOption && useCustomRate && (
-                  <div className="space-y-2 mb-3">
-                    <Label
-                      htmlFor={`custom-rate-input-${service.id}`}
-                      className="text-xs"
-                    >
-                      Custom Rate ($/hour)
-                    </Label>
-                    <Input
-                      id={`custom-rate-input-${service.id}`}
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      placeholder="0.00"
-                      value={customRate || ""}
-                      onChange={(e) =>
-                        handleCustomRateChange(parseFloat(e.target.value) || 0)
-                      }
-                    />
-                  </div>
-                )}
+              {/* Custom Rate Input */}
+              {selectedOption && useCustomRate && (
+                <div className="space-y-2 mb-3">
+                  <Label
+                    htmlFor={`custom-rate-input-${service.id}`}
+                    className="text-xs"
+                  >
+                    Custom Rate ($/hour)
+                  </Label>
+                  <Input
+                    id={`custom-rate-input-${service.id}`}
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={customRate || ""}
+                    onChange={(e) =>
+                      handleCustomRateChange(parseFloat(e.target.value) || 0)
+                    }
+                  />
+                </div>
+              )}
 
-                {/* Quantity Input */}
-                {selectedOption && (
-                  <div className="space-y-2">
-                    <Label
-                      htmlFor={`quantity-${service.id}`}
-                      className="text-xs"
-                    >
-                      Quantity (Hours)
-                    </Label>
-                    <Input
-                      id={`quantity-${service.id}`}
-                      type="number"
-                      min="0"
-                      step="0.5"
-                      placeholder="0"
-                      value={quantity || ""}
-                      onChange={(e) =>
-                        handleQuantityChange(parseFloat(e.target.value) || 0)
-                      }
-                    />
-                  </div>
-                )}
-              </div>
+              {/* Number of Feeds Dropdown for Bookkeeping Services */}
+              {isFeedsRangeService && selectedOption && (
+                <div className="space-y-2">
+                  <Label
+                    htmlFor={`feeds-range-${service.id}`}
+                    className="text-xs"
+                  >
+                    Number of Feeds
+                  </Label>
+                  <Select
+                    value={storeService.feedsRange || ""}
+                    onValueChange={handleFeedsRangeChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select number of feeds" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {feedsRangeOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Number of Employees Dropdown for specific services */}
+              {isEmployeeRangeService && selectedOption && (
+                <div className="space-y-2">
+                  <Label
+                    htmlFor={`employees-range-${service.id}`}
+                    className="text-xs"
+                  >
+                    Number of Employees
+                  </Label>
+                  <Select
+                    value={storeService.employeesRange || ""}
+                    onValueChange={handleEmployeesRangeChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select number of employees" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {employeesRangeOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {/* Quantity Input */}
+              {selectedOption && (
+                <div className="space-y-2">
+                  <Label htmlFor={`quantity-${service.id}`} className="text-xs">
+                    Quantity (Hours)
+                  </Label>
+                  <Input
+                    id={`quantity-${service.id}`}
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    placeholder="0"
+                    value={quantity || ""}
+                    onChange={(e) =>
+                      handleQuantityChange(parseFloat(e.target.value) || 0)
+                    }
+                  />
+                </div>
+              )}
             </div>
 
             {/* Cost Display */}
-            <div className="mt-4">
+            <div className="pt-3">
               {selectedOption && quantity && quantity > 0 ? (
                 <div className="p-2 bg-muted rounded-lg border-l-4 border-primary overflow-hidden">
                   <div className="flex justify-between items-center">
@@ -315,6 +400,15 @@ export const ServiceCard: React.FC<ServiceCardProps> = ({
                       {getTotalCost().toFixed(2)}
                     </span>
                   </div>
+                  {/* Show selected range if applicable */}
+                  {(storeService.feedsRange || storeService.employeesRange) && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {storeService.feedsRange &&
+                        `Feeds: ${storeService.feedsRange}`}
+                      {storeService.employeesRange &&
+                        `Employees: ${storeService.employeesRange}`}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="p-2 bg-gray-50 rounded-lg border border-dashed border-gray-300 text-center">

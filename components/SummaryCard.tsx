@@ -1496,6 +1496,14 @@ export default function SummaryCard({
                             : selectedOpt?.rate ?? 0;
                           const cost = (service.quantity ?? 0) * rate;
 
+                          let additionalInfo = "";
+                          if (service.feedsRange) {
+                            additionalInfo += ` | Feeds: ${service.feedsRange}`;
+                          }
+                          if (service.employeesRange) {
+                            additionalInfo += ` | Employees: ${service.employeesRange}`;
+                          }
+
                           return (
                             <div
                               key={service.id}
@@ -1507,7 +1515,7 @@ export default function SummaryCard({
                                 </p>
                                 <p className="text-xs text-gray-500">
                                   {selectedOpt?.label} - {service.quantity} × $
-                                  {rate.toFixed(0)} each
+                                  {rate.toFixed(0)}${additionalInfo}
                                 </p>
                               </div>
                               <div className="text-right">

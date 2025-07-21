@@ -13,6 +13,18 @@ export const STANDARD_RATES = {
   accountant: { value: "accountant", label: "Accountant", rate: 300 },
   senior: { value: "senior", label: "Senior Manager", rate: 400 },
   partner: { value: "partner", label: "Partner", rate: 600 },
+  // Add new Bookkeeper rates
+  bookkeeper: { value: "bookkeeper", label: "Bookkeeper", rate: 45 },
+  senior_bookkeeper: {
+    value: "senior_bookkeeper",
+    label: "Senior Bookkeeper",
+    rate: 75,
+  },
+  manager_bookkeeper: {
+    value: "manager_bookkeeper",
+    label: "Manager Bookkeeper",
+    rate: 110,
+  },
 } as const;
 
 export const getStandardRateOptions = (): ServiceOption[] => {
@@ -41,6 +53,8 @@ export interface ServiceWithOptions {
   quantity?: number;
   customRate?: number;
   useCustomRate?: boolean;
+  feedsRange?: string; // For Bookkeeping services
+  employeesRange?: string; // For specific Bookkeeping services
 }
 
 export interface ServiceWithFixedCost {
@@ -136,6 +150,16 @@ export interface EstimationStore {
     serviceId: string,
     expenses: number
   ) => void;
+  updateFeedsRange: (
+    sectionId: string,
+    serviceId: string,
+    range: string
+  ) => void;
+  updateEmployeesRange: (
+    sectionId: string,
+    serviceId: string,
+    range: string
+  ) => void;
   updateClientGroup: (clientGroup: string) => void;
   updateClientAddress: (address: string) => void;
   updateContactPerson: (contactPerson: string) => void;
@@ -154,6 +178,13 @@ export interface EstimationStore {
   addSection: (name: string) => void;
   getServiceOptions: (sectionId: string, serviceId: string) => ServiceOption[];
 }
+
+// Add helper function to get Bookkeeper rates
+const getBookkeeperRateOptions = () => [
+  STANDARD_RATES.bookkeeper,
+  STANDARD_RATES.senior_bookkeeper,
+  STANDARD_RATES.manager_bookkeeper,
+];
 
 export const useEstimationStore = create<EstimationStore>((set, get) => ({
   clientInfo: {
@@ -455,6 +486,7 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Managing accounts receivable, accounts payable, journal entries, and financial reports.",
           type: "withOptions",
+          rateOptions: getBookkeeperRateOptions(),
         },
         {
           id: "bookkeeping-bank-reconciliation",
@@ -462,12 +494,14 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Reconciling bank transactions to ensure accuracy in financial records.",
           type: "withOptions",
+          rateOptions: getBookkeeperRateOptions(),
         },
         {
           id: "bookkeeping-attendance-general",
           name: "Bookkeeping Attendance - General",
           description: "General bookkeeping attendance and support.",
           type: "withOptions",
+          rateOptions: getBookkeeperRateOptions(),
         },
         {
           id: "data-entry-bank-coding-reconciliation",
@@ -475,6 +509,7 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Processing data entry, bank transaction coding, and reconciliation.",
           type: "withOptions",
+          rateOptions: getBookkeeperRateOptions(),
         },
         {
           id: "payroll-process-aba-file",
@@ -482,6 +517,7 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Processing payroll and preparing ABA files for direct payments.",
           type: "withOptions",
+          rateOptions: getBookkeeperRateOptions(),
         },
         {
           id: "stp-filing",
@@ -489,6 +525,7 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Processing and lodging Single Touch Payroll (STP) reports.",
           type: "withOptions",
+          rateOptions: getBookkeeperRateOptions(),
         },
         {
           id: "super-process-lodgement",
@@ -496,6 +533,7 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Processing and lodging superannuation payments for employees.",
           type: "withOptions",
+          rateOptions: getBookkeeperRateOptions(),
         },
         {
           id: "xero-bookkeeping-support",
@@ -503,6 +541,7 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Providing support and assistance for Xero bookkeeping tasks.",
           type: "withOptions",
+          rateOptions: getBookkeeperRateOptions(),
         },
         {
           id: "xero-setup",
@@ -510,12 +549,14 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Setting up Xero accounts and configurations for business needs.",
           type: "withOptions",
+          rateOptions: getBookkeeperRateOptions(),
         },
         {
           id: "xero-training",
           name: "Xero Training",
           description: "Providing training sessions on using Xero effectively.",
           type: "withOptions",
+          rateOptions: getBookkeeperRateOptions(),
         },
         {
           id: "accounts-payable-batch-preparation",
@@ -523,6 +564,7 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Processing accounts payable and preparing batch payments.",
           type: "withOptions",
+          rateOptions: getBookkeeperRateOptions(),
         },
         {
           id: "accounts-receivable-debt-reconciliation",
@@ -530,6 +572,7 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
           description:
             "Managing accounts receivable and reconciling outstanding debts.",
           type: "withOptions",
+          rateOptions: getBookkeeperRateOptions(),
         },
         {
           id: "bookkeeping-other",
@@ -852,6 +895,44 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
               services: section.services.map((service) =>
                 service.id === serviceId && service.type === "rnD"
                   ? { ...service, rdExpenses: expenses }
+                  : service
+              ),
+            }
+          : section
+      ),
+    })),
+
+  updateFeedsRange: (sectionId, serviceId, range) =>
+    set((state) => ({
+      sections: state.sections.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              services: section.services.map((service) =>
+                service.id === serviceId && service.type === "withOptions"
+                  ? {
+                      ...service,
+                      feedsRange: range,
+                    }
+                  : service
+              ),
+            }
+          : section
+      ),
+    })),
+
+  updateEmployeesRange: (sectionId, serviceId, range) =>
+    set((state) => ({
+      sections: state.sections.map((section) =>
+        section.id === sectionId
+          ? {
+              ...section,
+              services: section.services.map((service) =>
+                service.id === serviceId && service.type === "withOptions"
+                  ? {
+                      ...service,
+                      employeesRange: range,
+                    }
                   : service
               ),
             }
