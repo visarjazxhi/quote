@@ -433,6 +433,22 @@ export default function SummaryCard({
               doc.text(description, 25, yPosition);
               yPosition += description.length * 3 + 3;
             }
+
+            // Add feeds/employees information if available
+            if (service.feedsRange || service.employeesRange) {
+              doc.setFontSize(8);
+              doc.setTextColor(100);
+              let additionalInfo = "";
+              if (service.feedsRange) {
+                additionalInfo += `Feeds: ${service.feedsRange}`;
+              }
+              if (service.employeesRange) {
+                if (additionalInfo) additionalInfo += " | ";
+                additionalInfo += `Employees: ${service.employeesRange}`;
+              }
+              doc.text(additionalInfo, 25, yPosition);
+              yPosition += 8;
+            }
           } else if (
             service.type === "fixedCost" &&
             service.value !== undefined
@@ -855,6 +871,16 @@ export default function SummaryCard({
                 : selectedOption.rate;
 
             const totalAmount = rate * service.quantity;
+
+            // Add additional info for feeds and employees
+            let additionalInfo = "";
+            if (service.feedsRange) {
+              additionalInfo += ` | Feeds: ${service.feedsRange}`;
+            }
+            if (service.employeesRange) {
+              additionalInfo += ` | Employees: ${service.employeesRange}`;
+            }
+
             servicesHtml += `
               <tr>
                 <td style="padding: 6px; border-bottom: 1px solid #eee;">${
@@ -862,7 +888,7 @@ export default function SummaryCard({
                 }</td>
                 <td style="padding: 6px; border-bottom: 1px solid #eee; text-align: center;">${
                   service.quantity
-                } hrs</td>
+                } × $${rate.toFixed(0)}${additionalInfo}</td>
                 <td style="padding: 6px; border-bottom: 1px solid #eee; text-align: right;">$${totalAmount.toFixed(
                   2
                 )}</td>

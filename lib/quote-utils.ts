@@ -32,6 +32,8 @@ interface DbQuote {
     quantity: number | null;
     customRate: number | null;
     useCustomRate: boolean;
+    feedsRange: string | null;
+    employeesRange: string | null;
     fixedValue: number | null;
     customDescription: string | null;
     customAmount: number | null;
@@ -84,6 +86,9 @@ export function convertDbQuoteToStore(
               updatedService.quantity = dbService.quantity ?? undefined;
               updatedService.customRate = dbService.customRate ?? undefined;
               updatedService.useCustomRate = dbService.useCustomRate;
+              updatedService.feedsRange = dbService.feedsRange ?? undefined;
+              updatedService.employeesRange =
+                dbService.employeesRange ?? undefined;
             }
             break;
 

@@ -64,6 +64,8 @@ model QuoteService {
   quantity       Float?
   customRate     Float?
   useCustomRate  Boolean @default(false)
+  feedsRange     String? // For Bookkeeping services - number of feeds
+  employeesRange String? // For specific Bookkeeping services - number of employees
 
   // For fixedCost services
   fixedValue Float?

@@ -144,6 +144,12 @@ export async function POST(request: NextRequest) {
                   service.type === "withOptions"
                     ? service.useCustomRate
                     : false,
+                feedsRange:
+                  service.type === "withOptions" ? service.feedsRange : null,
+                employeesRange:
+                  service.type === "withOptions"
+                    ? service.employeesRange
+                    : null,
                 // fixedCost fields
                 fixedValue: service.type === "fixedCost" ? service.value : null,
                 // manualInput fields
