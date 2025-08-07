@@ -85,14 +85,14 @@ export default function Home() {
                   <LucideHandCoins className="h-6 w-6 text-purple-600" />
                 </div>
                 <CardTitle className="text-2xl font-semibold text-gray-800">
-                  Finance Tracker
+                  Finance Calculators
                 </CardTitle>
-                <Badge variant="default">Work in progress</Badge>
+                {/* <Badge variant="default">Work in progress</Badge> */}
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-center text-gray-600">
-                  A platform to manage the finance of the practice. Track
-                  expenses, income, and savings.
+                  A place to find financial calculators for various purposes.
+                   TVM, Compound Interest, Loan etc.
                 </CardDescription>
               </CardContent>
             </Card>
