@@ -8,7 +8,7 @@ import { usePathname } from "next/navigation";
 
 const navigation = [
   { name: "Quote", href: "/quote" },
-  { name: "Job Estimation", href: "/estimate" },
+  // { name: "Job Estimation", href: "/estimate" },
   { name: "Finance", href: "/finance" },
   { name: "Priority", href: "/priority" },
   { name: "Decision", href: "/decision" },
@@ -36,6 +36,7 @@ export default function MainNav() {
             <Link className="mr-6 flex items-center space-x-2" href="/" suppressHydrationWarning>
               <span className="hidden font-bold sm:inline-block" suppressHydrationWarning>
                 Integritas Technologies
+                
               </span>
             </Link>
             <nav className="flex items-center space-x-6 text-sm font-medium" suppressHydrationWarning>

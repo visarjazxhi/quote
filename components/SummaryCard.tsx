@@ -1,6 +1,14 @@
 "use client";
 
-import { ChevronRight, Download, Mail, Plus, Save, Trash2 } from "lucide-react";
+import {
+  ChevronRight,
+  Download,
+  Mail,
+  Plus,
+  Save,
+  Settings,
+  Trash2,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -8,12 +16,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "./ui/dialog";
-import { ServiceSection, useEstimationStore } from "@/lib/store";
+import {
+  ManualHourDistribution,
+  ServiceSection,
+  useEstimationStore,
+} from "@/lib/store";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "./ui/button";
 import ClientWrapper from "./ClientWrapper";
 import { Input } from "./ui/input";
+import ManualHourDistributionDialog from "./ManualHourDistribution";
 import { jsPDF } from "jspdf";
 import { saveQuoteToDatabase } from "@/lib/quote-utils";
 import { toast } from "sonner";
@@ -28,9 +41,11 @@ const getValidSections = (sections: ServiceSection[]) => {
         return service.value !== undefined;
       } else if (service.type === "manualInput") {
         return (
-          service.customDescription &&
-          service.customAmount &&
-          service.customRate
+          service.customDescription !== undefined &&
+          service.customAmount !== undefined &&
+          service.customRate !== undefined &&
+          service.customAmount > 0 &&
+          service.customRate > 0
         );
       } else if (service.type === "rnD") {
         return service.rdExpenses !== undefined && service.rdExpenses > 0;
@@ -59,6 +74,8 @@ export default function SummaryCard({
     discount,
     feesCharged,
     updateFeesCharged,
+    setManualHourDistribution,
+    updateManualHourDistribution,
   } = useEstimationStore();
   const [emails, setEmails] = useState<string>("");
   const [emailList, setEmailList] = useState<string[]>([]);
@@ -67,10 +84,86 @@ export default function SummaryCard({
   const [mounted, setMounted] = useState(false);
   const [isGeneratingEmail, setIsGeneratingEmail] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isManualHoursOpen, setIsManualHoursOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Helper function to get total hours from selected services
+  const getTotalHours = useCallback(() => {
+    return getValidSections(sections).reduce((totalHours, section) => {
+      return (
+        totalHours +
+        section.services.reduce((sectionHours, service) => {
+          if (
+            service.type === "withOptions" &&
+            service.selectedOption &&
+            service.quantity
+          ) {
+            return sectionHours + service.quantity;
+          } else if (
+            service.type === "manualInput" &&
+            service.customAmount !== undefined &&
+            service.customRate !== undefined &&
+            service.customAmount > 0 &&
+            service.customRate > 0
+          ) {
+            // For manualInput services like compliance onboarding, customAmount represents hours
+            return sectionHours + service.customAmount;
+          }
+          return sectionHours;
+        }, 0)
+      );
+    }, 0);
+  }, [sections]);
+
+  // Helper function to calculate cost based on manual distribution or average
+  const getCalculatedTotalCost = useCallback(() => {
+    if (!clientInfo.jobTeam) return 0;
+
+    if (
+      clientInfo.useManualHourDistribution &&
+      clientInfo.manualHourDistribution
+    ) {
+      // Use manual distribution
+      return clientInfo.manualHourDistribution.reduce(
+        (sum, item) => sum + item.allocatedHours * item.hourlyRate,
+        0
+      );
+    } else {
+      // Use average cost
+      return getTotalHours() * clientInfo.jobTeam.averageCost;
+    }
+  }, [
+    clientInfo.jobTeam,
+    clientInfo.useManualHourDistribution,
+    clientInfo.manualHourDistribution,
+    getTotalHours,
+  ]);
+
+  // Handle manual hour distribution
+  const handleManualHourDistribution = () => {
+    if (!clientInfo.jobTeam) {
+      toast.error("Please select a job team first");
+      return;
+    }
+
+    const totalHours = getTotalHours();
+    if (totalHours === 0) {
+      toast.error("Please add some services with hours first");
+      return;
+    }
+
+    setIsManualHoursOpen(true);
+  };
+
+  const handleSaveManualDistribution = (
+    distribution: ManualHourDistribution[]
+  ) => {
+    updateManualHourDistribution(distribution);
+    setManualHourDistribution(true);
+  };
 
   // Initialize email list from comma-separated emails
   useEffect(() => {
@@ -490,9 +583,11 @@ export default function SummaryCard({
             }
           } else if (
             service.type === "manualInput" &&
-            service.customDescription &&
+            service.customDescription !== undefined &&
             service.customAmount !== undefined &&
-            service.customRate !== undefined
+            service.customRate !== undefined &&
+            service.customAmount > 0 &&
+            service.customRate > 0
           ) {
             const totalAmount = service.customAmount * service.customRate;
 
@@ -910,9 +1005,11 @@ export default function SummaryCard({
             </tr>`;
         } else if (
           service.type === "manualInput" &&
-          service.customDescription &&
+          service.customDescription !== undefined &&
           service.customAmount !== undefined &&
-          service.customRate !== undefined
+          service.customRate !== undefined &&
+          service.customAmount > 0 &&
+          service.customRate > 0
         ) {
           const totalAmount = service.customAmount * service.customRate;
           servicesHtml += `
@@ -1294,7 +1391,7 @@ export default function SummaryCard({
           )}
 
           {/* Total Row */}
-          <div className="px-3 py-4">
+          <div className="px-3 py-4 border-b border-blue-100">
             <div className="flex justify-between items-center">
               <span className="text-xl font-semibold text-blue-900">
                 Total Value
@@ -1304,6 +1401,31 @@ export default function SummaryCard({
               </span>
             </div>
           </div>
+
+          {/* Total Cost Row - Only show if job team is selected */}
+          {clientInfo.jobTeam && (
+            <div className="px-3 py-3">
+              <div className="flex justify-between items-center">
+                <span className="text-lg font-medium text-gray-700">
+                  Total Cost
+                </span>
+                <span className="text-lg font-semibold text-gray-900">
+                  ${getCalculatedTotalCost().toFixed(2)}
+                </span>
+              </div>
+              <div className="text-xs text-gray-500 text-right mt-1">
+                {clientInfo.useManualHourDistribution ? (
+                  <span className="text-blue-600 font-medium">
+                    Manual Distribution
+                  </span>
+                ) : (
+                  `${getTotalHours().toFixed(
+                    1
+                  )} hrs × $${clientInfo.jobTeam.averageCost.toFixed(2)}/hr`
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* SECTION 3: Action Buttons */}
@@ -1327,6 +1449,32 @@ export default function SummaryCard({
                 </>
               )}
             </Button>
+
+            {/* Manual Hours Button - Only show if job team selected */}
+            {clientInfo.jobTeam && (
+              <Button
+                onClick={handleManualHourDistribution}
+                variant={
+                  clientInfo.useManualHourDistribution ? "default" : "outline"
+                }
+                size="sm"
+                className={`${
+                  clientInfo.useManualHourDistribution
+                    ? "bg-blue-600 hover:bg-blue-700 text-white"
+                    : ""
+                }`}
+                title={
+                  clientInfo.useManualHourDistribution
+                    ? "Edit manual hour distribution"
+                    : "Arrange hours manually"
+                }
+              >
+                <Settings className="h-4 w-4 mr-1" />
+                {clientInfo.useManualHourDistribution
+                  ? "Edit Hours"
+                  : "Arrange Hrs"}
+              </Button>
+            )}
 
             {/* Download PDF Button - Icon only */}
             <Button
@@ -1577,9 +1725,11 @@ export default function SummaryCard({
                           );
                         } else if (
                           service.type === "manualInput" &&
-                          service.customDescription &&
+                          service.customDescription !== undefined &&
                           service.customAmount !== undefined &&
-                          service.customRate !== undefined
+                          service.customRate !== undefined &&
+                          service.customAmount > 0 &&
+                          service.customRate > 0
                         ) {
                           const cost =
                             service.customAmount * service.customRate;
@@ -1593,7 +1743,9 @@ export default function SummaryCard({
                                   {service.name}
                                 </p>
                                 <p className="text-xs text-gray-500">
-                                  {service.customAmount} × $
+                                  {service.customDescription ||
+                                    "Custom service"}{" "}
+                                  - {service.customAmount} × $
                                   {service.customRate.toFixed(0)} each
                                 </p>
                               </div>
@@ -1656,6 +1808,18 @@ export default function SummaryCard({
           </div>
         </div>
       </div>
+
+      {/* Manual Hour Distribution Dialog */}
+      {clientInfo.jobTeam && (
+        <ManualHourDistributionDialog
+          isOpen={isManualHoursOpen}
+          onClose={() => setIsManualHoursOpen(false)}
+          jobTeam={clientInfo.jobTeam}
+          totalHours={getTotalHours()}
+          currentDistribution={clientInfo.manualHourDistribution}
+          onSave={handleSaveManualDistribution}
+        />
+      )}
     </ClientWrapper>
   );
 }

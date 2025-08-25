@@ -31,6 +31,10 @@ model Quote {
   discountAmount      Float   @default(0)
   feesCharged         Float   @default(0)
 
+  // Job Team
+  jobTeam   JobTeam? @relation(fields: [jobTeamId], references: [id])
+  jobTeamId String?
+
   // Related entities and services
   entities   Entity[]
   services   QuoteService[]
@@ -95,6 +99,41 @@ enum ServiceType {
   FIXED_COST
   MANUAL_INPUT
   RND
+}
+
+// ===== JOB TEAM MODELS =====
+model JobTeam {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name        String
+  description String?
+  isActive    Boolean @default(true)
+
+  // Team members
+  members JobTeamMember[]
+  
+  // Quotes using this team
+  quotes Quote[]
+
+  @@map("job_teams")
+}
+
+model JobTeamMember {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  name      String
+  hourlyRate Float   // Cost per hour for this team member
+  isActive  Boolean @default(true)
+
+  // Team relationship
+  team     JobTeam @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId   String
+
+  @@map("job_team_members")
 }
 
 // ===== FORECAST MODELS =====

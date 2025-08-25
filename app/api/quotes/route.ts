@@ -15,6 +15,11 @@ export async function GET() {
       include: {
         entities: true,
         services: true,
+        jobTeam: {
+          include: {
+            members: true,
+          },
+        },
       },
       orderBy: {
         updatedAt: "desc",
@@ -92,6 +97,7 @@ export async function POST(request: NextRequest) {
         clientGroup: clientInfo.clientGroup || null,
         address: clientInfo.address || null,
         contactPerson: clientInfo.contactPerson || null,
+        jobTeamId: clientInfo.jobTeam?.id || null,
         discountDescription: discount.description || null,
         discountAmount: discount.amount || 0,
         feesCharged: feesCharged || 0,
@@ -170,6 +176,11 @@ export async function POST(request: NextRequest) {
       include: {
         entities: true,
         services: true,
+        jobTeam: {
+          include: {
+            members: true,
+          },
+        },
       },
     });
 

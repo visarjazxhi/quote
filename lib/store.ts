@@ -104,11 +104,33 @@ export interface Entity {
   accountingSoftware?: string;
 }
 
+export interface JobTeam {
+  id: string;
+  name: string;
+  description?: string;
+  members: {
+    id: string;
+    name: string;
+    hourlyRate: number;
+  }[];
+  averageCost: number;
+}
+
+export interface ManualHourDistribution {
+  memberId: string;
+  memberName: string;
+  hourlyRate: number;
+  allocatedHours: number;
+}
+
 export interface ClientInfo {
   clientGroup: string;
   address: string;
   contactPerson: string;
   entities: Entity[];
+  jobTeam?: JobTeam;
+  useManualHourDistribution?: boolean;
+  manualHourDistribution?: ManualHourDistribution[];
 }
 
 export interface Discount {
@@ -163,6 +185,11 @@ export interface EstimationStore {
   updateClientGroup: (clientGroup: string) => void;
   updateClientAddress: (address: string) => void;
   updateContactPerson: (contactPerson: string) => void;
+  updateJobTeam: (jobTeam: JobTeam | undefined) => void;
+  setManualHourDistribution: (useManual: boolean) => void;
+  updateManualHourDistribution: (
+    distribution: ManualHourDistribution[]
+  ) => void;
   addEntity: () => void;
   removeEntity: (entityId: string) => void;
   updateEntity: (
@@ -1026,6 +1053,37 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
       clientInfo: {
         ...state.clientInfo,
         contactPerson,
+      },
+    })),
+
+  updateJobTeam: (jobTeam) =>
+    set((state) => ({
+      clientInfo: {
+        ...state.clientInfo,
+        jobTeam,
+        // Reset manual distribution when team changes
+        useManualHourDistribution: false,
+        manualHourDistribution: undefined,
+      },
+    })),
+
+  setManualHourDistribution: (useManual) =>
+    set((state) => ({
+      clientInfo: {
+        ...state.clientInfo,
+        useManualHourDistribution: useManual,
+        // Reset distribution when switching back to average
+        manualHourDistribution: useManual
+          ? state.clientInfo.manualHourDistribution
+          : undefined,
+      },
+    })),
+
+  updateManualHourDistribution: (distribution) =>
+    set((state) => ({
+      clientInfo: {
+        ...state.clientInfo,
+        manualHourDistribution: distribution,
       },
     })),
 

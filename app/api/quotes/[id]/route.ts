@@ -47,6 +47,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       include: {
         entities: true,
         services: true,
+        jobTeam: {
+          include: {
+            members: true,
+          },
+        },
       },
     });
 
@@ -109,6 +114,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         clientGroup: clientInfo.clientGroup || null,
         address: clientInfo.address || null,
         contactPerson: clientInfo.contactPerson || null,
+        jobTeamId: clientInfo.jobTeam?.id || null,
         discountDescription: discount.description || null,
         discountAmount: discount.amount || 0,
         feesCharged: feesCharged || 0,
@@ -181,6 +187,11 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       include: {
         entities: true,
         services: true,
+        jobTeam: {
+          include: {
+            members: true,
+          },
+        },
       },
     });
 

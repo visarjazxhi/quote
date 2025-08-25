@@ -10,6 +10,16 @@ interface DbQuote {
   clientGroup: string | null;
   address: string | null;
   contactPerson: string | null;
+  jobTeam?: {
+    id: string;
+    name: string;
+    description?: string;
+    members: Array<{
+      id: string;
+      name: string;
+      hourlyRate: number;
+    }>;
+  } | null;
   status: "DRAFT" | "DOWNLOADED" | "SENT";
   discountDescription: string | null;
   discountAmount: number;
@@ -126,6 +136,25 @@ export function convertDbQuoteToStore(
       clientGroup: dbQuote.clientGroup || "",
       address: dbQuote.address || "",
       contactPerson: dbQuote.contactPerson || "",
+      jobTeam: dbQuote.jobTeam
+        ? {
+            id: dbQuote.jobTeam.id,
+            name: dbQuote.jobTeam.name,
+            description: dbQuote.jobTeam.description,
+            members: dbQuote.jobTeam.members.map((member) => ({
+              id: member.id,
+              name: member.name,
+              hourlyRate: member.hourlyRate,
+            })),
+            averageCost:
+              dbQuote.jobTeam.members.length > 0
+                ? dbQuote.jobTeam.members.reduce(
+                    (sum, member) => sum + member.hourlyRate,
+                    0
+                  ) / dbQuote.jobTeam.members.length
+                : 0,
+          }
+        : undefined,
       entities: dbQuote.entities.map((entity) => ({
         id: entity.id,
         name: entity.name,

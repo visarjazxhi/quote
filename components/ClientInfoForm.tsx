@@ -7,7 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus, Trash2 } from "lucide-react";
+import { JobTeam, useEstimationStore } from "@/lib/store";
+import { Plus, Trash2, Users } from "lucide-react";
+import React, { useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -22,8 +24,8 @@ import ClientWrapper from "./ClientWrapper";
 import GooglePlacesAutocomplete from "./GooglePlacesAutocomplete";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { TeamManagement } from "@/components/TeamManagement";
 import { toast } from "sonner";
-import { useEstimationStore } from "@/lib/store";
 
 const entityTypes = [
   "Individual",
@@ -41,10 +43,52 @@ export default function ClientInfoForm() {
     updateClientGroup,
     updateClientAddress,
     updateContactPerson,
+    updateJobTeam,
     addEntity,
     removeEntity,
     updateEntity,
   } = useEstimationStore();
+
+  const [availableTeams, setAvailableTeams] = useState<JobTeam[]>([]);
+  const [loadingTeams, setLoadingTeams] = useState(false);
+
+  // Fetch available teams
+  const fetchTeams = async () => {
+    setLoadingTeams(true);
+    try {
+      const response = await fetch("/api/job-teams");
+
+      if (response.ok) {
+        const teams = await response.json();
+        setAvailableTeams(teams);
+      } else {
+        const errorText = await response.text();
+        throw new Error(
+          `Failed to fetch teams: ${response.status} ${errorText}`
+        );
+      }
+    } catch (error) {
+      console.error("Error fetching teams:", error);
+      toast.error("Failed to fetch teams");
+    } finally {
+      setLoadingTeams(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTeams();
+  }, []);
+
+  const handleTeamChange = (teamId: string) => {
+    if (teamId === "none") {
+      updateJobTeam(undefined);
+    } else {
+      const selectedTeam = availableTeams.find((team) => team.id === teamId);
+      if (selectedTeam) {
+        updateJobTeam(selectedTeam);
+      }
+    }
+  };
 
   const handleEntityUpdate = (
     id: string,
@@ -99,6 +143,95 @@ export default function ClientInfoForm() {
         </Card>
       }
     >
+      {/* Job Team Selection */}
+      <Card
+        className="border-green-200 bg-green-50/50 mb-6"
+        suppressHydrationWarning
+      >
+        <CardHeader suppressHydrationWarning>
+          <CardTitle className="text-green-800" suppressHydrationWarning>
+            Job Team Selection
+          </CardTitle>
+          <CardDescription suppressHydrationWarning>
+            Select the team that will work on this project
+          </CardDescription>
+        </CardHeader>
+        <CardContent suppressHydrationWarning>
+          <div
+            className="grid grid-cols-1 md:grid-cols-2 gap-4"
+            suppressHydrationWarning
+          >
+            {/* Job Team Dropdown */}
+            <div className="space-y-2" suppressHydrationWarning>
+              <Label htmlFor="job-team" suppressHydrationWarning>
+                Job Team
+              </Label>
+              <Select
+                value={clientInfo.jobTeam?.id || "none"}
+                onValueChange={handleTeamChange}
+                disabled={loadingTeams}
+              >
+                <SelectTrigger>
+                  <SelectValue
+                    placeholder={
+                      loadingTeams ? "Loading teams..." : "Select a team"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">No team assigned</SelectItem>
+                  {availableTeams.map((team) => (
+                    <SelectItem key={team.id} value={team.id}>
+                      {team.name} - Avg: ${team.averageCost.toFixed(2)}/hr
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Manage Teams Button */}
+            <div className="space-y-2" suppressHydrationWarning>
+              <Label suppressHydrationWarning>Team Management</Label>
+              <TeamManagement
+                trigger={
+                  <Button variant="outline" className="w-full">
+                    <Users className="h-4 w-4 mr-2" />
+                    Manage Teams
+                  </Button>
+                }
+                onTeamChange={fetchTeams}
+              />
+            </div>
+          </div>
+
+          {/* Selected Team Info */}
+          {clientInfo.jobTeam && (
+            <div
+              className="mt-4 p-3 bg-white rounded-lg border"
+              suppressHydrationWarning
+            >
+              <h4 className="font-medium text-sm mb-2">
+                Selected Team: {clientInfo.jobTeam.name}
+              </h4>
+              {clientInfo.jobTeam.description && (
+                <p className="text-xs text-muted-foreground mb-2">
+                  {clientInfo.jobTeam.description}
+                </p>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <span className="text-xs font-medium">
+                  Average Cost: ${clientInfo.jobTeam.averageCost.toFixed(2)}/hr
+                </span>
+                <span className="text-xs text-muted-foreground">•</span>
+                <span className="text-xs text-muted-foreground">
+                  {clientInfo.jobTeam.members.length} members
+                </span>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Card className="border-blue-200 bg-blue-50/50" suppressHydrationWarning>
         <CardHeader suppressHydrationWarning>
           <CardTitle className="text-blue-800" suppressHydrationWarning>
