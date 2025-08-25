@@ -1,12 +1,14 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 const navigation = [
   { name: "Quote", href: "/quote" },
+  { name: "Job Estimation", href: "/estimate" },
   { name: "Finance", href: "/finance" },
   { name: "Priority", href: "/priority" },
   { name: "Decision", href: "/decision" },
