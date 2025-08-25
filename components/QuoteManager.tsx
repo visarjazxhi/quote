@@ -143,25 +143,42 @@ export const QuoteManager: React.FC = () => {
       } catch (error) {
         console.error("Error loading quote:", error);
 
-        // If it's a 404 error, the quote was likely deleted
-        if (
-          error instanceof Error &&
-          error.message.includes("Failed to load quote")
-        ) {
-          toast.error("This quote no longer exists. It may have been deleted.");
+        let errorMessage = "Failed to load quote. Please try again.";
+        let shouldRefreshList = false;
 
-          // Refresh the quote list to remove stale quotes
-          if (quoteListRef.current) {
-            await quoteListRef.current.refreshQuotes();
+        if (error instanceof Error) {
+          // Handle specific error types with appropriate user messages
+          if (error.message.includes("Quote not found")) {
+            errorMessage =
+              "This quote no longer exists. It may have been deleted.";
+            shouldRefreshList = true;
+          } else if (error.message.includes("Database connection failed")) {
+            errorMessage =
+              "Database connection issue. Please check your connection and try again.";
+          } else if (error.message.includes("Server error occurred")) {
+            errorMessage =
+              "Server error occurred. Please try again in a moment.";
+          } else if (error.message.includes("Failed to load quote")) {
+            // Use the more specific error message from loadQuoteFromDatabase
+            errorMessage = error.message;
+            // Check if it's a deletion case
+            if (error.message.includes("may have been deleted")) {
+              shouldRefreshList = true;
+            }
           }
+        }
+
+        toast.error(errorMessage);
+
+        // Refresh the quote list if the quote was deleted or not found
+        if (shouldRefreshList && quoteListRef.current) {
+          await quoteListRef.current.refreshQuotes();
 
           // Clear the selected quote if it was the one that failed to load
           if (selectedQuoteId === quote.id) {
             setSelectedQuoteId(undefined);
             resetStore();
           }
-        } else {
-          toast.error("Failed to load quote. Please try again.");
         }
       } finally {
         setIsLoading(false);

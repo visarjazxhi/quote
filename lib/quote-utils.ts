@@ -195,125 +195,179 @@ export async function saveQuoteToDatabase(quoteId?: string): Promise<string> {
 }
 
 export async function loadQuoteFromDatabase(quoteId: string): Promise<void> {
-  const response = await fetch(`/api/quotes/${quoteId}`);
+  try {
+    const response = await fetch(`/api/quotes/${quoteId}`);
 
-  if (!response.ok) {
-    throw new Error("Failed to load quote");
-  }
+    if (!response.ok) {
+      let errorMessage = "Failed to load quote";
+      let errorDetails = "";
 
-  const dbQuote: DbQuote = await response.json();
-  const storeData = convertDbQuoteToStore(dbQuote);
+      try {
+        const errorData = await response.json();
+        errorDetails = errorData.error || errorData.details || "";
+      } catch {
+        // If response is not JSON, get status text
+        errorDetails = response.statusText;
+      }
 
-  // Update the store with the loaded data
-  const store = useEstimationStore.getState();
+      // Provide more specific error messages
+      switch (response.status) {
+        case 404:
+          errorMessage = "Quote not found - it may have been deleted";
+          break;
+        case 503:
+          errorMessage = "Database connection failed - please try again later";
+          break;
+        case 500:
+          errorMessage = "Server error occurred while loading quote";
+          break;
+        default:
+          errorMessage = `Failed to load quote (${response.status})`;
+      }
 
-  if (storeData.clientInfo) {
-    store.updateClientGroup(storeData.clientInfo.clientGroup);
-    store.updateClientAddress(storeData.clientInfo.address);
-    store.updateContactPerson(storeData.clientInfo.contactPerson);
+      // Include details if available
+      if (errorDetails) {
+        errorMessage += `: ${errorDetails}`;
+      }
 
-    // Set entities directly with loaded data, creating new IDs
-    const entitiesWithNewIds = storeData.clientInfo.entities.map(
-      (entityData, index) => ({
-        ...entityData,
-        id: `loaded-${Date.now()}-${index}`, // Generate unique IDs for loaded entities
-        accountingSoftware: entityData.accountingSoftware || "", // Ensure accountingSoftware is never undefined
-      })
-    );
+      throw new Error(errorMessage);
+    }
 
-    store.setEntities(entitiesWithNewIds);
-  }
+    const dbQuote: DbQuote = await response.json();
+    const storeData = convertDbQuoteToStore(dbQuote);
 
-  if (storeData.discount) {
-    store.updateDiscount("description", storeData.discount.description);
-    store.updateDiscount("amount", storeData.discount.amount);
-  }
+    // Update the store with the loaded data
+    const store = useEstimationStore.getState();
 
-  if (storeData.feesCharged !== undefined) {
-    store.updateFeesCharged(storeData.feesCharged);
-  }
+    if (storeData.clientInfo) {
+      store.updateClientGroup(storeData.clientInfo.clientGroup);
+      store.updateClientAddress(storeData.clientInfo.address);
+      store.updateContactPerson(storeData.clientInfo.contactPerson);
 
-  // Update sections and services
-  if (storeData.sections) {
-    storeData.sections.forEach((sectionData) => {
-      sectionData.services.forEach((serviceData) => {
-        const sectionId = sectionData.id;
-        const serviceId = serviceData.id;
+      // Set entities directly with loaded data, creating new IDs
+      const entitiesWithNewIds = storeData.clientInfo.entities.map(
+        (entityData, index) => ({
+          ...entityData,
+          id: `loaded-${Date.now()}-${index}`, // Generate unique IDs for loaded entities
+          accountingSoftware: entityData.accountingSoftware || "", // Ensure accountingSoftware is never undefined
+        })
+      );
 
-        // Apply service data based on type
-        switch (serviceData.type) {
-          case "withOptions":
-            if (serviceData.selectedOption !== undefined) {
-              store.updateOption(
-                sectionId,
-                serviceId,
-                serviceData.selectedOption
-              );
-              if (serviceData.quantity !== undefined) {
-                store.updateQuantity(
+      store.setEntities(entitiesWithNewIds);
+    }
+
+    if (storeData.discount) {
+      store.updateDiscount("description", storeData.discount.description);
+      store.updateDiscount("amount", storeData.discount.amount);
+    }
+
+    if (storeData.feesCharged !== undefined) {
+      store.updateFeesCharged(storeData.feesCharged);
+    }
+
+    // Update sections and services
+    if (storeData.sections) {
+      storeData.sections.forEach((sectionData) => {
+        sectionData.services.forEach((serviceData) => {
+          const sectionId = sectionData.id;
+          const serviceId = serviceData.id;
+
+          // Apply service data based on type
+          switch (serviceData.type) {
+            case "withOptions":
+              if (serviceData.selectedOption !== undefined) {
+                store.updateOption(
                   sectionId,
                   serviceId,
-                  serviceData.quantity
+                  serviceData.selectedOption
                 );
+                if (serviceData.quantity !== undefined) {
+                  store.updateQuantity(
+                    sectionId,
+                    serviceId,
+                    serviceData.quantity
+                  );
+                }
+                if (
+                  serviceData.useCustomRate &&
+                  serviceData.customRate !== undefined
+                ) {
+                  store.toggleCustomRate(sectionId, serviceId);
+                  store.updateCustomRate(
+                    sectionId,
+                    serviceId,
+                    serviceData.customRate
+                  );
+                }
               }
-              if (
-                serviceData.useCustomRate &&
-                serviceData.customRate !== undefined
-              ) {
-                store.toggleCustomRate(sectionId, serviceId);
-                store.updateCustomRate(
-                  sectionId,
-                  serviceId,
-                  serviceData.customRate
-                );
+              break;
+
+            case "fixedCost":
+              if (serviceData.value !== undefined) {
+                store.updateFixedCost(sectionId, serviceId, serviceData.value);
               }
-            }
-            break;
+              break;
 
-          case "fixedCost":
-            if (serviceData.value !== undefined) {
-              store.updateFixedCost(sectionId, serviceId, serviceData.value);
-            }
-            break;
-
-          case "manualInput":
-            if (serviceData.customDescription !== undefined) {
-              store.updateManualInput(
-                sectionId,
-                serviceId,
-                "customDescription",
-                serviceData.customDescription
-              );
-              if (serviceData.customAmount !== undefined) {
+            case "manualInput":
+              if (serviceData.customDescription !== undefined) {
                 store.updateManualInput(
                   sectionId,
                   serviceId,
-                  "customAmount",
-                  serviceData.customAmount
+                  "customDescription",
+                  serviceData.customDescription
                 );
+                if (serviceData.customAmount !== undefined) {
+                  store.updateManualInput(
+                    sectionId,
+                    serviceId,
+                    "customAmount",
+                    serviceData.customAmount
+                  );
+                }
+                if (serviceData.customRate !== undefined) {
+                  store.updateManualInput(
+                    sectionId,
+                    serviceId,
+                    "customRate",
+                    serviceData.customRate
+                  );
+                }
               }
-              if (serviceData.customRate !== undefined) {
-                store.updateManualInput(
+              break;
+
+            case "rnD":
+              if (serviceData.rdExpenses !== undefined) {
+                store.updateRnDExpenses(
                   sectionId,
                   serviceId,
-                  "customRate",
-                  serviceData.customRate
+                  serviceData.rdExpenses
                 );
               }
-            }
-            break;
-
-          case "rnD":
-            if (serviceData.rdExpenses !== undefined) {
-              store.updateRnDExpenses(
-                sectionId,
-                serviceId,
-                serviceData.rdExpenses
-              );
-            }
-            break;
-        }
+              break;
+          }
+        });
       });
-    });
+    }
+  } catch (networkError) {
+    // Handle network errors and other exceptions
+    console.error("Error in loadQuoteFromDatabase:", networkError);
+
+    if (networkError instanceof Error) {
+      // If it's already our custom error from the response handling, re-throw it
+      if (
+        networkError.message.includes("Failed to load quote") ||
+        networkError.message.includes("Quote not found") ||
+        networkError.message.includes("Database connection failed") ||
+        networkError.message.includes("Server error occurred")
+      ) {
+        throw networkError;
+      }
+
+      // For other errors (network issues, JSON parsing, etc.)
+      throw new Error(`Failed to load quote: ${networkError.message}`);
+    }
+
+    // Fallback for unknown error types
+    throw new Error("Failed to load quote due to an unexpected error");
   }
 }
