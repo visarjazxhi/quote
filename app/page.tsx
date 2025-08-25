@@ -1,6 +1,5 @@
 import {
   BookOpenText,
-  Calculator,
   ChartArea,
   LibraryBig,
   LucideHandCoins,
