@@ -48,7 +48,7 @@ export default function Home() {
             </Card>
           </Link>
 
-          <Link href="/estimate" className="flex items-center space-x-2">
+          {/* <Link href="/estimate" className="flex items-center space-x-2">
             <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader className="flex flex-col items-center">
                 <div className="rounded-full bg-indigo-100 p-3 mb-4">
@@ -65,7 +65,7 @@ export default function Home() {
                 </CardDescription>
               </CardContent>
             </Card>
-          </Link>
+          </Link> */}
 
           <Link href="/emails" className="flex items-center space-x-2">
             <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
