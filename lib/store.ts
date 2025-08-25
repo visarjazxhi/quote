@@ -980,8 +980,9 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
         section.services.reduce((serviceTotal, service) => {
           if (
             service.type === "withOptions" &&
-            service.selectedOption &&
-            service.quantity
+            service.selectedOption !== undefined &&
+            service.quantity !== undefined &&
+            service.quantity > 0
           ) {
             // Use custom rate if enabled, otherwise use selected option rate
             const rate =
@@ -994,13 +995,16 @@ export const useEstimationStore = create<EstimationStore>((set, get) => ({
             return serviceTotal + rate * service.quantity;
           } else if (
             service.type === "fixedCost" &&
-            service.value !== undefined
+            service.value !== undefined &&
+            service.value > 0
           ) {
             return serviceTotal + service.value;
           } else if (
             service.type === "manualInput" &&
             service.customAmount !== undefined &&
-            service.customRate !== undefined
+            service.customRate !== undefined &&
+            service.customAmount > 0 &&
+            service.customRate > 0
           ) {
             return serviceTotal + service.customAmount * service.customRate;
           } else if (

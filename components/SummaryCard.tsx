@@ -36,9 +36,13 @@ const getValidSections = (sections: ServiceSection[]) => {
     // Check if the section has at least one valid service
     return section.services.some((service) => {
       if (service.type === "withOptions") {
-        return service.selectedOption && service.quantity;
+        return (
+          service.selectedOption !== undefined &&
+          service.quantity !== undefined &&
+          service.quantity > 0
+        );
       } else if (service.type === "fixedCost") {
-        return service.value !== undefined;
+        return service.value !== undefined && service.value > 0;
       } else if (service.type === "manualInput") {
         return (
           service.customDescription !== undefined &&
@@ -98,8 +102,9 @@ export default function SummaryCard({
         section.services.reduce((sectionHours, service) => {
           if (
             service.type === "withOptions" &&
-            service.selectedOption &&
-            service.quantity
+            service.selectedOption !== undefined &&
+            service.quantity !== undefined &&
+            service.quantity > 0
           ) {
             return sectionHours + service.quantity;
           } else if (
@@ -464,8 +469,9 @@ export default function SummaryCard({
         section.services.forEach((service) => {
           if (
             service.type === "withOptions" &&
-            service.selectedOption &&
-            service.quantity
+            service.selectedOption !== undefined &&
+            service.quantity !== undefined &&
+            service.quantity > 0
           ) {
             const serviceOptions = getServiceOptions(section.id, service.id);
             const selectedOption = serviceOptions.find(
@@ -544,7 +550,8 @@ export default function SummaryCard({
             }
           } else if (
             service.type === "fixedCost" &&
-            service.value !== undefined
+            service.value !== undefined &&
+            service.value > 0
           ) {
             // Find the original service definition to get description
             const originalService = sections
@@ -951,8 +958,9 @@ export default function SummaryCard({
       section.services.forEach((service) => {
         if (
           service.type === "withOptions" &&
-          service.selectedOption &&
-          service.quantity
+          service.selectedOption !== undefined &&
+          service.quantity !== undefined &&
+          service.quantity > 0
         ) {
           const serviceOptions = getServiceOptions(section.id, service.id);
           const selectedOption = serviceOptions.find(
@@ -991,7 +999,8 @@ export default function SummaryCard({
           }
         } else if (
           service.type === "fixedCost" &&
-          service.value !== undefined
+          service.value !== undefined &&
+          service.value > 0
         ) {
           servicesHtml += `
             <tr>
@@ -1654,8 +1663,9 @@ export default function SummaryCard({
                       {section.services.map((service) => {
                         if (
                           service.type === "withOptions" &&
-                          service.selectedOption &&
-                          service.quantity
+                          service.selectedOption !== undefined &&
+                          service.quantity !== undefined &&
+                          service.quantity > 0
                         ) {
                           const options = getServiceOptions(
                             section.id,
@@ -1701,7 +1711,8 @@ export default function SummaryCard({
                           );
                         } else if (
                           service.type === "fixedCost" &&
-                          service.value !== undefined
+                          service.value !== undefined &&
+                          service.value > 0
                         ) {
                           return (
                             <div
