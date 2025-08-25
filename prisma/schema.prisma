@@ -96,3 +96,325 @@ enum ServiceType {
   MANUAL_INPUT
   RND
 }
+
+// ===== FORECAST MODELS =====
+
+model Forecast {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Basic Information
+  name        String
+  description String?
+  
+  // Company Information
+  companyName     String?
+  industry        String?
+  businessType    String?
+  establishedYear Int?
+  employeeCount   Int?
+  
+  // Financial Settings
+  taxRate      Float @default(25.0)
+  targetIncome Float @default(0)
+  
+  // Status and Metadata
+  status      ForecastStatus @default(DRAFT)
+  isTemplate  Boolean        @default(false)
+  lastUpdated DateTime       @default(now())
+  
+  // Relationships
+  categories      ForecastCategory[]
+  forecastRecords ForecastRecord[]
+  scenarios       ScenarioConfig[]
+  balanceSheet    BalanceSheetAccount[]
+  
+  // User association (optional - for multi-user support)
+  userId String?
+  
+  @@map("forecasts")
+}
+
+model ForecastCategory {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Category Details
+  name         String
+  type         CategoryType
+  order        Int
+  isExpanded   Boolean @default(true)
+  isCalculated Boolean @default(false)
+  formula      String? // For calculated categories
+  
+  // Relationships
+  forecast      Forecast           @relation(fields: [forecastId], references: [id], onDelete: Cascade)
+  forecastId    String
+  subcategories ForecastSubcategory[]
+  
+  @@map("forecast_categories")
+}
+
+model ForecastSubcategory {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Subcategory Details
+  name  String
+  order Int
+  
+  // Relationships
+  category   ForecastCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId String
+  rows       FinancialRow[]
+  
+  @@map("forecast_subcategories")
+}
+
+model FinancialRow {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Row Details
+  name  String
+  type  CategoryType
+  order Int
+  
+  // Relationships
+  subcategory   ForecastSubcategory @relation(fields: [subcategoryId], references: [id], onDelete: Cascade)
+  subcategoryId String
+  values        FinancialValue[]
+  
+  @@map("financial_rows")
+}
+
+model FinancialValue {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Value Details
+  value       Float
+  year        Int
+  month       Int // 1-12
+  date        String // ISO date string
+  isProjected Boolean @default(true)
+  
+  // Relationships
+  row   FinancialRow @relation(fields: [rowId], references: [id], onDelete: Cascade)
+  rowId String
+  
+  @@unique([rowId, year, month])
+  @@map("financial_values")
+}
+
+model BalanceSheetAccount {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Account Details
+  name    String
+  section BalanceSheetSection
+  order   Int
+  
+  // Relationships
+  forecast   Forecast           @relation(fields: [forecastId], references: [id], onDelete: Cascade)
+  forecastId String
+  values     BalanceSheetValue[]
+  
+  @@map("balance_sheet_accounts")
+}
+
+model BalanceSheetValue {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Value Details
+  value       Float
+  year        Int
+  month       Int // 1-12
+  date        String // ISO date string
+  isProjected Boolean @default(true)
+  
+  // Relationships
+  account   BalanceSheetAccount @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  accountId String
+  
+  @@unique([accountId, year, month])
+  @@map("balance_sheet_values")
+}
+
+model ForecastRecord {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Record Details
+  name        String
+  accountIds  String[] // Array of account/row IDs
+  method      ForecastMethod
+  parameters  Json // Store method-specific parameters
+  startDate   String // YYYY-MM-DD format
+  endDate     String // YYYY-MM-DD format
+  status      RecordStatus @default(ACTIVE)
+  
+  // Relationships
+  forecast   Forecast @relation(fields: [forecastId], references: [id], onDelete: Cascade)
+  forecastId String
+  
+  @@map("forecast_records")
+}
+
+model ScenarioConfig {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Scenario Details
+  name        String
+  description String?
+  type        ScenarioType
+  value       Float // Percentage or Amount
+  accountIds  String[] // Array of account/row IDs
+  startDate   String // YYYY-MM-DD format
+  endDate     String // YYYY-MM-DD format
+  status      RecordStatus @default(ACTIVE)
+  
+  // Relationships
+  forecast   Forecast @relation(fields: [forecastId], references: [id], onDelete: Cascade)
+  forecastId String
+  
+  @@map("scenario_configs")
+}
+
+// ===== ENUMS =====
+
+enum ForecastStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+  TEMPLATE
+}
+
+enum CategoryType {
+  SALES_REVENUE
+  COGS
+  GROSS_PROFIT
+  OPERATING_EXPENSES
+  OPERATING_PROFIT
+  OTHER_INCOME
+  FINANCIAL_EXPENSES
+  OTHER_EXPENSES
+  NET_PROFIT_BEFORE_TAX
+  INCOME_TAX_EXPENSE
+  NET_PROFIT_AFTER_TAX
+  CALCULATED
+}
+
+enum BalanceSheetSection {
+  CURRENT_ASSETS
+  NON_CURRENT_ASSETS
+  CURRENT_LIABILITIES
+  NON_CURRENT_LIABILITIES
+  EQUITY
+}
+
+enum ForecastMethod {
+  LINEAR_TREND
+  EXPONENTIAL_SMOOTHING
+  SEASONAL
+  GROWTH_RATE
+  FIXED_AMOUNT
+  PERCENTAGE_OF_REVENUE
+  ARIMA
+  MONTE_CARLO
+  MACHINE_LEARNING
+  POLYNOMIAL_REGRESSION
+  SEASONAL_DECOMPOSITION
+  HOLT_WINTERS
+}
+
+enum ScenarioType {
+  PERCENTAGE
+  AMOUNT
+}
+
+enum RecordStatus {
+  ACTIVE
+  PAUSED
+  COMPLETED
+}
+
+// ===== JOB ESTIMATION MODELS =====
+
+model TeamMember {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Team Member Details
+  name        String
+  hourlyRate  Float
+  isActive    Boolean  @default(true)
+  
+  // Relationships
+  estimations JobEstimationMember[]
+  managedJobs JobEstimation[] @relation("ClientManager")
+  
+  @@map("team_members")
+}
+
+model JobEstimation {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Basic Information
+  name        String
+  description String?
+  
+  // Client Information
+  clientName  String?
+  clientEmail String?
+  
+  // Project Details
+  totalHours  Float    @default(0)
+  totalCost   Float    @default(0)
+  
+  // Client Manager (from Team)
+  clientManager   TeamMember? @relation("ClientManager", fields: [clientManagerId], references: [id])
+  clientManagerId String?
+  
+  // Relationships
+  teamMembers JobEstimationMember[]
+  
+  @@map("job_estimations")
+}
+
+model JobEstimationMember {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Assignment Details
+  hoursAllocated  Float
+  customRate      Float? // Optional custom rate override
+  
+  // Relationships
+  estimation      JobEstimation @relation(fields: [estimationId], references: [id], onDelete: Cascade)
+  estimationId    String
+  
+  teamMember      TeamMember @relation(fields: [teamMemberId], references: [id], onDelete: Cascade)
+  teamMemberId    String
+  
+  @@unique([estimationId, teamMemberId])
+  @@map("job_estimation_members")
+}
+
+

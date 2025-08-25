@@ -1,4 +1,13 @@
-import { BookOpenText, LibraryBig, LucideHandCoins, Mail, Pickaxe, Signature } from "lucide-react";
+import {
+  BookOpenText,
+  Calculator,
+  ChartArea,
+  LibraryBig,
+  LucideHandCoins,
+  Mail,
+  Pickaxe,
+  Signature,
+} from "lucide-react";
 import {
   Card,
   CardContent,
@@ -39,6 +48,25 @@ export default function Home() {
             </Card>
           </Link>
 
+          <Link href="/estimate" className="flex items-center space-x-2">
+            <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
+              <CardHeader className="flex flex-col items-center">
+                <div className="rounded-full bg-indigo-100 p-3 mb-4">
+                  <Calculator className="h-6 w-6 text-indigo-600" />
+                </div>
+                <CardTitle className="text-2xl font-semibold text-gray-800">
+                  Job Estimation
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-center text-gray-600">
+                  Estimate job costs with team member allocation, time tracking
+                  and comprehensive project planning.
+                </CardDescription>
+              </CardContent>
+            </Card>
+          </Link>
+
           <Link href="/emails" className="flex items-center space-x-2">
             <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader className="flex flex-col items-center">
@@ -48,7 +76,7 @@ export default function Home() {
                 <CardTitle className="text-2xl font-semibold text-gray-800">
                   Email templates
                 </CardTitle>
-                  {/* <Badge variant="default">Done</Badge> */}
+                {/* <Badge variant="default">Done</Badge> */}
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-center text-gray-600">
@@ -92,31 +120,30 @@ export default function Home() {
               <CardContent>
                 <CardDescription className="text-center text-gray-600">
                   A place to find financial calculators for various purposes.
-                   TVM, Compound Interest, Loan etc.
+                  TVM, Compound Interest, Loan etc.
                 </CardDescription>
               </CardContent>
             </Card>
           </Link>
 
-          <Link href="/course" className="flex items-center space-x-2">
+          <Link href="/forecast" className="flex items-center space-x-2">
             <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader className="flex flex-col items-center">
-                <div className="rounded-full bg-orange-100 p-3 mb-4">
-                  <BookOpenText className="h-6 w-6 text-orange-500" />
+                <div className="rounded-full bg-rose-100 p-3 mb-4">
+                  <ChartArea className="h-6 w-6 text-rose-600" />
                 </div>
                 <CardTitle className="text-2xl font-semibold text-gray-800">
-                  Income Tax Return Course
+                  Forecast
                 </CardTitle>
-                <Badge variant="default">Work in progress</Badge>
+                <Badge variant="destructive">Work in Progress</Badge>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-center text-gray-600">
-                  A course to learn how to prepare and lodge individual income tax returns.
+                  A tool to forecast the financial performance of a business.
                 </CardDescription>
               </CardContent>
             </Card>
           </Link>
-
           <Link href="/decision" className="flex items-center space-x-2">
             <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
               <CardHeader className="flex flex-col items-center">
@@ -130,8 +157,27 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-center text-gray-600">
-                  A set of decision trees to help clients decide on the best business
-                  structure for their business.
+                  A set of decision trees to help clients decide on the best
+                  business structure for their business.
+                </CardDescription>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link href="/course" className="flex items-center space-x-2">
+            <Card className="bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
+              <CardHeader className="flex flex-col items-center">
+                <div className="rounded-full bg-orange-100 p-3 mb-4">
+                  <BookOpenText className="h-6 w-6 text-orange-500" />
+                </div>
+                <CardTitle className="text-2xl font-semibold text-gray-800">
+                  Income Tax Return Course
+                </CardTitle>
+                <Badge variant="default">Work in progress</Badge>
+              </CardHeader>
+              <CardContent>
+                <CardDescription className="text-center text-gray-600">
+                  A course to learn how to prepare and lodge individual income
+                  tax returns.
                 </CardDescription>
               </CardContent>
             </Card>
