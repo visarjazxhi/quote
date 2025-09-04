@@ -43,6 +43,13 @@ export async function PUT(
     const body = await request.json();
     const { name, hourlyRate, isActive } = body;
 
+    console.log("PUT /api/team-members/[id] - Updating member:", {
+      id,
+      name,
+      hourlyRate,
+      isActive,
+    });
+
     const updateData: Record<string, unknown> = {};
     if (name !== undefined) updateData.name = name.trim();
     if (hourlyRate !== undefined) updateData.hourlyRate = hourlyRate;
@@ -53,7 +60,13 @@ export async function PUT(
       data: updateData,
     });
 
-    return NextResponse.json(teamMember);
+    console.log("PUT /api/team-members/[id] - Updated member:", teamMember);
+
+    return NextResponse.json(teamMember, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
   } catch (error) {
     console.error("Error updating team member:", error);
     if (
@@ -62,12 +75,12 @@ export async function PUT(
     ) {
       return NextResponse.json(
         { error: "Team member not found" },
-        { status: 404 }
+        { status: 404, headers: { "Content-Type": "application/json" } }
       );
     }
     return NextResponse.json(
       { error: "Failed to update team member" },
-      { status: 500 }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 }

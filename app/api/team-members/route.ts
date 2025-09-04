@@ -32,10 +32,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, hourlyRate } = body;
 
+    console.log("POST /api/team-members - Creating member:", {
+      name,
+      hourlyRate,
+    });
+
     if (!name || typeof hourlyRate !== "number") {
       return NextResponse.json(
         { error: "Name and hourly rate are required" },
-        { status: 400 }
+        { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
 
@@ -46,12 +51,17 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(teamMember, { status: 201 });
+    console.log("POST /api/team-members - Created member:", teamMember);
+
+    return NextResponse.json(teamMember, {
+      status: 201,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Error creating team member:", error);
     return NextResponse.json(
       { error: "Failed to create team member" },
-      { status: 500 }
+      { status: 500, headers: { "Content-Type": "application/json" } }
     );
   }
 }
